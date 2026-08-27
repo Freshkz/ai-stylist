@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>AI Stylist — Atelier digital</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="style.css" />
+
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0c0d0f" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+</head>
+
+<body>
+
+  <div id="authScreen" class="auth-screen" hidden>
+    <div class="auth-card">
+      <div class="auth-brand">
+        <span class="auth-brand-mark">✦</span>
+        <h1>AI STYLIST</h1>
+        <p>Digital Atelier</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" data-auth-tab="login">Iniciar sesión</button>
+        <button type="button" class="auth-tab" data-auth-tab="registro">Crear cuenta</button>
+      </div>
+
+      <form id="loginForm" class="auth-form">
+        <label>Email
+          <input type="email" id="loginEmail" required autocomplete="email" />
+        </label>
+        <label>Contraseña
+          <input type="password" id="loginPassword" required autocomplete="current-password" />
+        </label>
+        <button type="submit" class="auth-submit">Entrar</button>
+        <p class="auth-error" id="loginError" hidden></p>
+      </form>
+
+      <form id="registroForm" class="auth-form" hidden>
+        <label>Nombre
+          <input type="text" id="registroName" required autocomplete="name" />
+        </label>
+        <label>Email
+          <input type="email" id="registroEmail" required autocomplete="email" />
+        </label>
+        <label>Contraseña
+          <input type="password" id="registroPassword" required autocomplete="new-password" minlength="6" />
+        </label>
+        <button type="submit" class="auth-submit">Crear mi cuenta</button>
+        <p class="auth-error" id="registroError" hidden></p>
+      </form>
+    </div>
+  </div>
+
+  <div class="app-shell" id="appShell">
+
+    <!-- ==========================================
+         SIDEBAR
+    =========================================== -->
+
+    <aside class="sidebar">
+
+      <div class="brand">
+        <div class="brand-mark">A</div>
+
+        <div>
+          <div class="brand-name">AI Stylist</div>
+          <div class="brand-subtitle">Atelier digital</div>
+        </div>
+      </div>
+
+
+      <nav class="main-nav">
+
+        <div class="nav-label">
+          ESPACIO DE TRABAJO
+        </div>
+
+        <button class="nav-item active" data-section="analyze">
+          <span class="nav-icon">✦</span>
+          <span>Analizar mi estilo</span>
+        </button>
+
+        <button class="nav-item" data-section="wardrobe">
+          <span class="nav-icon">◫</span>
+          <span>Mi armario</span>
+        </button>
+
+        <button class="nav-item" data-section="outfits">
+          <span class="nav-icon">◇</span>
+          <span>Mis outfits</span>
+        </button>
+
+        <button class="nav-item" data-section="tryon">
+          <span class="nav-icon">👤</span>
+          <span>Mi modelo</span>
+        </button>
+
+        <button class="nav-item" data-section="history">
+          <span class="nav-icon">↻</span>
+          <span>Historial</span>
+        </button>
+
+      </nav>
+
+
+      <div class="sidebar-bottom">
+
+        <div class="atelier-note">
+          <span class="atelier-note-dot"></span>
+
+          <div>
+            <strong>Tu atelier</strong>
+            <span>Armario privado</span>
+          </div>
+        </div>
+      
+      <div class="credits-status" id="creditsStatus">
+          <div class="credits-status-row">
+            <span class="credits-status-dot"></span>
+            <span class="credits-status-label">Fashn AI</span>
+            <span class="credits-status-value" id="fashnCreditsValue">—</span>
+          </div>
+          <div class="credits-status-row">
+            <span class="credits-status-dot credits-status-dot-groq"></span>
+            <span class="credits-status-label">Groq (hoy)</span>
+            <span class="credits-status-value" id="groqCreditsValue">—</span>
+          </div>
+        </div>
+        <div class="profile-mini">
+          <div class="profile-avatar" id="profileAvatar">
+          <span id="profileAvatarLetter">F</span>
+          <img id="profileAvatarImg" src="" alt="" hidden />
+        </div>
+        <input type="file" id="avatarInput" accept="image/*" hidden />
+
+          <div class="profile-info">
+            <strong>Mi estilo</strong>
+            <span>Placard personal</span>
+          </div>
+
+          <span class="profile-more">•••</span>
+        </div>
+
+      </div>
+
+    </aside>
+
+
+    <!-- ==========================================
+         MAIN CONTENT
+    =========================================== -->
+
+    <main class="main-content">
+
+      <!-- ======================================
+           TOP BAR
+      ======================================= -->
+
+      <header class="topbar">
+
+        <div class="mobile-brand">
+          <span class="mobile-brand-mark">A</span>
+          <span>AI Stylist</span>
+        </div>
+
+        <div class="topbar-left">
+          <span class="eyebrow">MI ESPACIO DE ESTILO</span>
+        </div>
+
+        <div class="topbar-actions">
+
+          <button class="topbar-icon" aria-label="Buscar">
+            ⌕
+          </button>
+
+          <button class="topbar-icon" aria-label="Favoritos">
+            ♡
+          </button>
+
+          <div class="topbar-avatar" id="topbarAvatar">
+            F
+          </div>
+
+        </div>
+
+      </header>
+
+
+      <!-- ======================================
+           ANALYZE
+      ======================================= -->
+
+      <section id="analyzeSection" class="app-section active-section">
+
+        <div class="section-heading">
+
+          <div>
+            <span class="section-kicker">
+              TU ESTILO, ANALIZADO
+            </span>
+
+            <h1>
+              ¿Qué nos<br>
+              <em>ponemos hoy?</em>
+            </h1>
+
+            <p>
+              Subí una foto de cuerpo completo y dejá que tu estilista
+              personal descubra tu estilo.
+            </p>
+          </div>
+
+        </div>
+
+
+        <!-- Upload area -->
+
+        <div class="analysis-layout">
+
+          <div class="photo-stage">
+
+            <div class="stage-label">
+              <span class="status-dot"></span>
+              ANÁLISIS DE ESTILO
+            </div>
+
+            <label class="photo-dropzone" id="photoDropzone" for="photoInput">
+
+              <div class="dropzone-content">
+
+                <div class="upload-orbit">
+
+                  <div class="orbit-ring"></div>
+
+                  <div class="upload-symbol">
+                    +
+                  </div>
+
+                </div>
+
+                <h2>
+                  Arrastrá tu foto acá
+                </h2>
+
+                <p>
+                  o <span>elegí desde tu dispositivo</span>
+                </p>
+
+                <small>
+                  Las fotos de cuerpo completo funcionan mejor
+                </small>
+
+              </div>
+
+              <input
+                type="file"
+                id="photoInput"
+                accept="image/*"
+                hidden
+              />
+
+            </label>
+
+
+            <!-- Preview -->
+
+            <div
+              class="preview-box"
+              id="previewBox"
+              style="display:none;"
+            >
+
+              <div class="preview-image-wrap">
+
+                <img
+                  id="previewImage"
+                  src=""
+                  alt="Vista previa"
+                />
+
+              </div>
+
+              <div class="preview-overlay">
+                <span>LISTA PARA ANALIZAR</span>
+              </div>
+
+            </div>
+
+
+            <button
+              id="sendButton"
+              class="primary-action"
+              disabled
+            >
+              <span>Analizar mi estilo</span>
+              <span class="button-arrow">↗</span>
+            </button>
+
+
+            <div
+              class="response-box"
+              id="responseBox"
+            ></div>
+            <!-- ==========================================
+     PERSONA GUARDADA PARA VIRTUAL TRY-ON
+=========================================== -->
+
+<div
+  id="personaSavedBox"
+  class="persona-saved-box"
+  hidden
+>
+
+  <div class="persona-saved-image-wrap">
+    <img
+      id="personaSavedImage"
+      src=""
+      alt="Tu foto guardada"
+    />
+  </div>
+
+  <div class="persona-saved-info">
+    <span class="persona-saved-label">
+      TU PERSONA
+    </span>
+
+    <strong>
+      Foto guardada
+    </strong>
+
+    <span>
+      Esta será la foto utilizada para probarte prendas.
+    </span>
+  </div>
+
+  <button
+    type="button"
+    id="changePersonaButton"
+    class="text-action"
+  >
+    Cambiar foto
+  </button>
+
+</div>
+          </div>
+
+
+          <!-- Side information -->
+
+          <aside class="analysis-aside">
+
+            <div class="aside-card intro-card">
+
+              <span class="aside-number">
+                01
+              </span>
+
+              <h3>
+                Mirate<br>
+                distinto.
+              </h3>
+
+              <p>
+                Tu foto es el punto de partida para
+                entender tu estilo personal.
+              </p>
+
+            </div>
+
+
+            <div class="aside-card">
+
+              <div class="mini-feature">
+                <span class="mini-feature-icon">◌</span>
+
+                <div>
+                  <strong>Perfil de estilo</strong>
+                  <span>Descubrí tu estética</span>
+                </div>
+              </div>
+
+              <div class="mini-feature">
+                <span class="mini-feature-icon">◈</span>
+
+                <div>
+                  <strong>Paleta de colores</strong>
+                  <span>Encontrá tus mejores combinaciones</span>
+                </div>
+              </div>
+
+              <div class="mini-feature">
+                <span class="mini-feature-icon">✦</span>
+
+                <div>
+                  <strong>Ideas de outfits</strong>
+                  <span>Armadas con tu placard</span>
+                </div>
+              </div>
+
+            </div>
+
+          </aside>
+
+        </div>
+
+      </section>
+
+
+      <!-- ======================================
+           WARDROBE
+      ======================================= -->
+
+      <section
+        id="wardrobeSection"
+        class="app-section"
+      >
+
+        <div class="section-heading split-heading">
+
+          <div>
+            <span class="section-kicker">
+              TU PLACARD DIGITAL
+            </span>
+
+            <h1>
+              Mi <em>armario.</em>
+            </h1>
+
+            <p>
+              Todo lo que tenés, prolijamente organizado.
+            </p>
+          </div>
+
+          <div class="heading-actions">
+
+            <label
+              for="garmentInput"
+              class="secondary-action"
+            >
+              <span>+</span>
+              Agregar prenda
+            </label>
+
+            <input
+                type="file"
+                id="garmentInput"
+                accept="image/*"
+                multiple
+                hidden
+              />
+
+            <button
+              id="uploadGarmentButton"
+              class="primary-small"
+              disabled
+            >
+              Agregar al armario
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <!-- Preview de la prenda antes de agregarla -->
+
+        <div
+            class="garment-preview"
+            id="garmentPreview"
+            hidden
+          >
+            <div class="garment-preview-grid" id="garmentPreviewGrid"></div>
+            <div class="garment-preview-info">
+              <span id="garmentPreviewCount">Así se van a ver antes de agregarlas</span>
+              <button
+                type="button"
+                id="cancelGarmentPreview"
+                class="text-action"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+
+          <div class="combo-action-bar" id="comboActionBar" hidden>
+            <span id="comboCountLabel">0 prendas seleccionadas</span>
+            <button type="button" id="comboRunBtn" class="primary-small">Probar combinación</button>
+            <button type="button" id="comboCancelBtn" class="text-action">Cancelar</button>
+          </div>
+
+
+        <!-- Drop zone -->
+
+        <div
+          class="wardrobe-dropzone"
+          id="wardrobeDropzone"
+        >
+
+          <div class="wardrobe-drop-content">
+
+            <div class="floating-garment-placeholder">
+              ◇
+            </div>
+
+            <div>
+              <strong>
+                Soltá una prenda en tu armario
+              </strong>
+
+              <span>
+                Subí una foto desde tu computadora
+              </span>
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div
+          class="response-box"
+          id="garmentResponseBox"
+        ></div>
+
+
+        <div class="wardrobe-toolbar">
+
+          <div class="wardrobe-filters" id="wardrobeFilters">
+
+          <button class="filter-pill active" data-filter="todo">
+            Todo
+          </button>
+
+          <button class="filter-pill" data-filter="tops">
+            Tops
+          </button>
+
+          <button class="filter-pill" data-filter="pantalones">
+            Pantalones
+          </button>
+
+          <button class="filter-pill" data-filter="calzado">
+            Calzado
+          </button>
+
+          <button class="filter-pill" data-filter="abrigos">
+            Abrigos
+          </button>
+
+          <button class="filter-pill" data-filter="vestidos">
+            Vestidos
+          </button>
+
+          <button class="filter-pill" data-filter="accesorios">
+            Accesorios
+          </button>
+
+        </div>
+        <button type="button" id="toggleComboSelectionBtn" class="secondary-action compact">
+            Combinar prendas ✦
+          </button>
+
+          <button
+            id="loadWardrobeButton"
+            class="text-action"
+          >
+            Actualizar armario ↻
+          </button>
+
+        </div>
+
+
+        <div
+          class="grid wardrobe-grid"
+          id="wardrobeGrid"
+        ></div>
+
+      </section>
+
+
+      <!-- ======================================
+           OUTFITS
+      ======================================= -->
+
+      <section
+        id="outfitsSection"
+        class="app-section"
+      >
+
+        <div class="section-heading split-heading">
+
+          <div>
+
+            <span class="section-kicker">
+              ESTILISMO PERSONAL
+            </span>
+
+            <h1>
+              Creá un <em>look.</em>
+            </h1>
+
+            <p>
+              Dejá que tu armario inspire algo nuevo.
+            </p>
+
+          </div>
+
+
+          <button
+            id="generateOutfitsButton"
+            class="primary-action compact"
+          >
+            <span>Generar outfits</span>
+            <span class="button-arrow">↗</span>
+          </button>
+
+        </div>
+
+        <!-- Filtros Interactivos de Ocasión y Clima -->
+        <div class="outfits-filters-bar">
+          <div class="filter-group">
+            <span class="filter-group-label">OCASIÓN:</span>
+            <div class="filter-pills" id="outfitsOccasionFilters">
+              <button type="button" class="filter-pill active" data-ocasion="todas">Todas</button>
+              <button type="button" class="filter-pill" data-ocasion="casual">Casual</button>
+              <button type="button" class="filter-pill" data-ocasion="elegante">Cena elegante</button>
+              <button type="button" class="filter-pill" data-ocasion="noche">Fiesta / Noche</button>
+              <button type="button" class="filter-pill" data-ocasion="trabajo">Oficina / Trabajo</button>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <span class="filter-group-label">CLIMA:</span>
+            <div class="filter-pills" id="outfitsWeatherFilters">
+              <button type="button" class="filter-pill active" data-clima="cualquiera">Cualquiera</button>
+              <button type="button" class="filter-pill" data-clima="calido">☀️ Cálido / Verano</button>
+              <button type="button" class="filter-pill" data-clima="frio">❄️ Frío / Invierno</button>
+              <button type="button" class="filter-pill" data-clima="templado">🍂 Templado</button>
+            </div>
+          </div>
+        </div>
+
+
+        <div
+          class="outfits-stage"
+          id="outfitsContainer"
+        >
+
+          <div class="empty-outfits">
+
+            <div class="empty-outfits-symbol">
+              ✦
+            </div>
+
+            <h2>
+              Tu próximo look<br>
+              te espera.
+            </h2>
+
+            <p>
+              Agregá prendas a tu armario
+              y generá tus primeros outfits.
+            </p>
+
+          </div>
+
+        </div>
+
+      </section>
+
+            <!-- ======================================
+           MI MODELO (PERFIL CORPORAL)
+      ======================================= -->
+
+      <section
+        id="tryonSection"
+        class="app-section"
+      >
+
+        <div class="section-heading">
+
+          <span class="section-kicker">
+            PERFIL CORPORAL
+          </span>
+
+          <h1>
+            Mi <em>modelo.</em>
+          </h1>
+
+          <p>
+            Subí una foto de cuerpo completo para probarte cualquier prenda de tu armario en tiempo real.
+          </p>
+
+        </div>
+
+        <div class="model-profile-layout">
+
+          <div class="model-card">
+
+            <div class="model-status-badge" id="modelStatusBadge">
+              <span class="status-dot"></span>
+              <span id="modelStatusText">Comprobando foto corporal...</span>
+            </div>
+
+            <div class="model-photo-stage" id="modelPhotoStage">
+
+              <label for="bodyPhotoInput" class="model-dropzone" id="bodyPhotoDropzone">
+
+                <div class="model-dropzone-empty" id="bodyPhotoEmpty">
+                  <div class="upload-orbit">
+                    <div class="orbit-ring"></div>
+                    <div class="upload-symbol">+</div>
+                  </div>
+                  <h3>Subí tu foto corporal</h3>
+                  <p>Arrastrá una imagen o <span>hacé click para buscar</span></p>
+                  <small>Recomendado: foto de frente, cuerpo entero, buena luz</small>
+                </div>
+
+                <div class="model-photo-preview-wrap" id="bodyPhotoPreviewWrap" hidden>
+                  <img id="bodyPhotoPreview" src="" alt="Mi Modelo Corporativo" />
+                  <div class="model-overlay-tag">FOTO ACTIVA PARA TRY-ON</div>
+                </div>
+
+                <input type="file" id="bodyPhotoInput" accept="image/*" hidden />
+
+              </label>
+
+            </div>
+
+            <div class="model-actions-bar">
+              <label for="bodyPhotoInput" class="secondary-action compact">
+                <span>✦</span>
+                <span id="uploadBodyPhotoBtnText">Subir foto corporal</span>
+              </label>
+
+              <button type="button" id="deleteBodyPhotoBtn" class="text-action danger-text" hidden>
+                Eliminar foto
+              </button>
+            </div>
+
+            <div id="bodyPhotoStatus" class="response-box"></div>
+
+          </div>
+
+          <aside class="model-aside">
+
+            <div class="aside-card intro-card">
+              <span class="aside-number">02</span>
+              <h3>Tu probador<br><em>privado.</em></h3>
+              <p>
+                Esta foto se usará como tu avatar para probarte prendas directamente desde las tarjetas de tu armario.
+              </p>
+            </div>
+
+            <div class="aside-card">
+              <div class="mini-feature">
+                <span class="mini-feature-icon">⚡</span>
+                <div>
+                  <strong>Procesamiento Fashn AI</strong>
+                  <span>Renderizado hiper-realista</span>
+                </div>
+              </div>
+              <div class="mini-feature">
+                <span class="mini-feature-icon">🔒</span>
+                <div>
+                  <strong>100% Privado</strong>
+                  <span>Almacenado de forma segura</span>
+                </div>
+              </div>
+            </div>
+
+          </aside>
+
+        </div>
+
+      </section>
+
+
+      <!-- ======================================
+           HISTORY
+      ======================================= -->
+
+      <section
+        id="historySection"
+        class="app-section"
+      >
+
+        <div class="section-heading">
+
+          <span class="section-kicker">
+            TU DIARIO DE ESTILO
+          </span>
+
+          <h1>
+            Looks que <em>amaste.</em>
+          </h1>
+
+          <p>
+            Llevá un registro de tus combinaciones favoritas.
+          </p>
+
+        </div>
+
+
+        <div class="history-tabs">
+
+          <button
+            id="tabAllButton"
+            class="history-tab active"
+          >
+            Todos los looks
+          </button>
+
+          <button
+            id="tabFavButton"
+            class="history-tab inactive"
+          >
+            Favoritos
+          </button>
+
+        </div>
+
+
+        <div
+          id="historyContainer"
+          class="history-grid"
+        ></div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+
+  <!-- ==========================================
+       MODAL: EDITAR PRENDA
+  =========================================== -->
+
+  <div
+    class="modal-overlay"
+    id="editGarmentModal"
+    hidden
+  >
+    <div class="modal-box">
+
+      <h3>Editar prenda</h3>
+
+      <label class="modal-field">
+        <span>Tipo</span>
+        <input type="text" id="editTipo" />
+      </label>
+
+      <label class="modal-field">
+        <span>Colores</span>
+        <input type="text" id="editColores" />
+      </label>
+
+      <label class="modal-field">
+        <span>Estilo</span>
+        <input type="text" id="editEstilo" />
+      </label>
+
+      <label class="modal-field">
+        <span>Descripción</span>
+        <textarea id="editDescripcion" rows="3"></textarea>
+      </label>
+
+      <div class="modal-actions">
+        <button type="button" id="cancelEditGarment" class="text-action">
+          Cancelar
+        </button>
+
+        <button type="button" id="saveEditGarment" class="primary-small">
+          Guardar cambios
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ==========================================
+       MODAL: RESULTADO VIRTUAL TRY-ON (FASHN AI)
+  =========================================== -->
+
+  <div class="modal-overlay" id="tryonResultModal" hidden>
+    <div class="modal-box modal-tryon-box">
+      
+      <div class="tryon-modal-header">
+        <span class="section-kicker">PROBADOR VIRTUAL FASHN AI</span>
+        <h2>Así se ve tu <em>look.</em></h2>
+      </div>
+
+      <div class="tryon-modal-image-wrap">
+        <div class="tryon-loading" id="tryonLoading">
+          <div class="tryon-loading-spinner"></div>
+          <span>Generando con Fashn AI...</span>
+           <div class="tryon-combo-progress" id="tryonComboProgress" hidden></div>
+        </div>
+        <img id="tryonModalResultImage" src="" alt="Resultado Virtual Try-On" />
+      </div>
+
+      <div class="tryon-modal-meta" id="tryonModalMeta">
+        <span class="tryon-badge" id="tryonCacheBadge">⚡ Recuperado de Caché (0 créditos gastados)</span>
+      </div>
+
+      <div class="modal-actions tryon-modal-actions">
+        <input type="text" id="tryonOutfitNameInput" class="auth-form-input-standalone" placeholder="Nombre del outfit" />
+        <button type="button" id="saveTryonOutfitBtn" class="primary-small">
+          <span>✦</span> Guardar en mis outfits
+        </button>
+
+        <button type="button" id="tryonAnotherBtn" class="secondary-action compact">
+          Probar otra prenda
+        </button>
+
+        <button type="button" id="closeTryonModalBtn" class="text-action">
+          Volver al armario
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ==========================================
+       MODAL: ADVERTENCIA FOTO CORPORAL FALTANTE
+  =========================================== -->
+
+  <div class="modal-overlay" id="missingBodyPhotoModal" hidden>
+    <div class="modal-box">
+      <div class="missing-photo-icon">👤</div>
+      <h3>Configurar Mi Modelo</h3>
+      <p>Primero necesitás subir una foto de cuerpo completo en la sección <strong>"Mi modelo"</strong> para poder utilizar el probador virtual en tu armario.</p>
+
+      <div class="modal-actions">
+        <button type="button" id="closeMissingPhotoModal" class="text-action">
+          Cancelar
+        </button>
+        <button type="button" id="goToModelSectionBtn" class="primary-small">
+          Ir a Mi modelo ↗
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ==========================================
+       BARRA DE NAVEGACIÓN INFERIOR MÓVIL (PWA)
+  =========================================== -->
+
+  <nav class="mobile-bottom-nav">
+    <button type="button" class="mobile-nav-item active" data-section="analyze">
+      <span class="nav-icon">✦</span>
+      <span>Analizar</span>
+    </button>
+    <button type="button" class="mobile-nav-item" data-section="wardrobe">
+      <span class="nav-icon">◫</span>
+      <span>Armario</span>
+    </button>
+    <button type="button" class="mobile-nav-item" data-section="outfits">
+      <span class="nav-icon">◇</span>
+      <span>Outfits</span>
+    </button>
+    <button type="button" class="mobile-nav-item" data-section="tryon">
+      <span class="nav-icon">👤</span>
+      <span>Modelo</span>
+    </button>
+    <button type="button" class="mobile-nav-item" data-section="history">
+      <span class="nav-icon">↻</span>
+      <span>Historial</span>
+    </button>
+  </nav>
+
+  <!-- ==========================================
+       SCRIPT
+  =========================================== -->
+
+  <script src="app.js"></script>
+
+</body>
+</html>

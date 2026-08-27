@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+python-multipart
+google-genai
+python-dotenv
+psycopg2-binary
+groq
+requests
+bcrypt
+PyJWT
+rembg
+Pillow
