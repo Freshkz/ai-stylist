@@ -8,24 +8,12 @@ const BACKEND_URL = window.location.origin && !window.location.origin.includes("
 // vieja (ej. datos ya guardados antes de la migración).
 
 // ============================
-// Remoción de fondo (en el navegador, sin costo de servidor)
+// Nota: se probó remoción de fondo automática en el navegador
+// (@imgly/background-removal) pero requiere headers especiales del
+// servidor (COOP/COEP) que generan efectos secundarios con las
+// imágenes de Supabase y no funcionan en Safari. Se sacó por
+// confiabilidad — las prendas se suben con su fondo original.
 // ============================
-
-let _removeBgFn = null;
-
-async function quitarFondo(file) {
-  try {
-    if (!_removeBgFn) {
-      const modulo = await import("@imgly/background-removal");
-      _removeBgFn = modulo.default;
-    }
-    const blob = await _removeBgFn(file);
-    return new File([blob], file.name.replace(/\.[^.]+$/, ".png"), { type: "image/png" });
-  } catch (error) {
-    console.warn("No se pudo quitar el fondo, se sube la imagen original:", error);
-    return file; // si falla, seguimos con la imagen tal cual, sin romper el flujo
-  }
-}
 
 function imgUrl(pathOrUrl) {
   if (!pathOrUrl) return "";
@@ -607,9 +595,6 @@ if (uploadGarmentButton) {
     for (let i = 0; i < total; i++) {
 
       let file = selectedGarmentFiles[i];
-
-      uploadGarmentButton.textContent = `Quitando fondo ${i + 1}/${total}...`;
-      file = await quitarFondo(file);
 
       uploadGarmentButton.textContent = `Analizando ${i + 1}/${total}...`;
 
