@@ -47,6 +47,7 @@ from database import (
 from fashn import crear_tryon, FashnError, obtener_creditos
 from auth import hash_password, verificar_password, crear_token, obtener_usuario_actual
 import storage
+from bg_removal import quitar_fondo, RemoveBgError
 
 
 class PrendaUpdate(BaseModel):
@@ -238,9 +239,11 @@ async def upload_photo(file: UploadFile = File(...)):
 @app.post("/armario/subir")
 async def subir_prenda(file: UploadFile = File(...), user_id: int = Depends(obtener_usuario_actual)):
     """
-    Sube y analiza una prenda nueva para el armario. La remoción de fondo
-    ahora se hace en el navegador del usuario (no en el servidor), para no
-    consumir la memoria limitada del plan gratis de Render.
+    Sube y analiza una prenda nueva para el armario. El fondo se remueve
+    con la API de remove.bg (fuera del servidor, no consume memoria de
+    Render). Si remove.bg falla por el motivo que sea (sin créditos ese
+    mes, error puntual), seguimos con la foto original en vez de cortar
+    el flujo del usuario.
     """
     image_bytes = await file.read()
     extension = os.path.splitext(file.filename or "")[1] or ".jpg"
@@ -252,7 +255,15 @@ async def subir_prenda(file: UploadFile = File(...), user_id: int = Depends(obte
     except Exception as e:
         return {"status": "error", "message": f"No se pudo analizar la imagen: {str(e)}"}
 
-    url = storage.subir_bytes(image_bytes, carpeta="prendas", extension=extension, content_type=mime_type)
+    try:
+        processed_bytes = quitar_fondo(image_bytes)
+        extension = ".png"
+        mime_type = "image/png"
+    except RemoveBgError as e:
+        print(f"[REMOVE.BG WARN] No se pudo quitar el fondo, se sube la imagen original: {e}")
+        processed_bytes = image_bytes
+
+    url = storage.subir_bytes(processed_bytes, carpeta="prendas", extension=extension, content_type=mime_type)
 
     tipo = analysis.tipo or "prenda sin identificar"
     colores = ", ".join(analysis.colores) if analysis.colores else ""
