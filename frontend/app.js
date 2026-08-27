@@ -2584,6 +2584,7 @@ checkBodyPhotoStatus();
 async function cargarEstadoCreditos() {
   const fashnEl = document.getElementById("fashnCreditsValue");
   const groqEl = document.getElementById("groqCreditsValue");
+  const removeBgEl = document.getElementById("removeBgCreditsValue");
   if (!fashnEl || !groqEl) return;
 
   try {
@@ -2603,9 +2604,20 @@ async function cargarEstadoCreditos() {
     } else {
       groqEl.textContent = "aún sin usar";
     }
+
+    if (removeBgEl) {
+      const removeBg = data.remove_bg;
+      if (removeBg && typeof removeBg.total_disponible === "number") {
+        removeBgEl.textContent = `${removeBg.total_disponible} fotos`;
+        removeBgEl.classList.toggle("credits-low", removeBg.total_disponible <= 5);
+      } else {
+        removeBgEl.textContent = "sin datos";
+      }
+    }
   } catch (error) {
     fashnEl.textContent = "error";
     groqEl.textContent = "error";
+    if (removeBgEl) removeBgEl.textContent = "error";
   }
 }
 

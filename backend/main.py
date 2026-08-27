@@ -47,7 +47,7 @@ from database import (
 from fashn import crear_tryon, FashnError, obtener_creditos
 from auth import hash_password, verificar_password, crear_token, obtener_usuario_actual
 import storage
-from bg_removal import quitar_fondo, RemoveBgError
+from bg_removal import quitar_fondo, obtener_creditos_removebg, RemoveBgError
 
 
 class PrendaUpdate(BaseModel):
@@ -643,7 +643,22 @@ def estado_creditos():
     except FashnError as e:
         fashn_error = str(e)
 
-    return {"status": "success", "fashn": fashn_data, "fashn_error": fashn_error, "groq": obtener_estado_groq()}
+    remove_bg_data = None
+    remove_bg_error = None
+
+    try:
+        remove_bg_data = obtener_creditos_removebg()
+    except RemoveBgError as e:
+        remove_bg_error = str(e)
+
+    return {
+        "status": "success",
+        "fashn": fashn_data,
+        "fashn_error": fashn_error,
+        "groq": obtener_estado_groq(),
+        "remove_bg": remove_bg_data,
+        "remove_bg_error": remove_bg_error,
+    }
 
 
 @app.post("/perfil/avatar")

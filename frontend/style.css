@@ -436,6 +436,10 @@ em {
   background: var(--success);
 }
 
+.credits-status-dot-removebg {
+  background: #6aa3ff;
+}
+
 .credits-status-label {
   color: var(--text-muted);
   flex: 1;

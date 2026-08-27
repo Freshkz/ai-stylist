@@ -49,3 +49,36 @@ def quitar_fondo(image_bytes: bytes) -> bytes:
         raise RemoveBgError(f"remove.bg devolvió un error ({response.status_code}): {detalle}")
 
     return response.content
+
+
+def obtener_creditos_removebg() -> dict:
+    """
+    Consulta el saldo de créditos/llamadas gratis de remove.bg.
+    Solo consulta el saldo, no gasta créditos por sí sola.
+    """
+    if not REMOVE_BG_API_KEY:
+        raise RemoveBgError("No existe REMOVE_BG_API_KEY en el archivo .env")
+
+    response = requests.get(
+        "https://api.remove.bg/v1.0/account",
+        headers={"X-Api-Key": REMOVE_BG_API_KEY},
+        timeout=15,
+    )
+
+    try:
+        data = response.json()
+    except Exception:
+        raise RemoveBgError(f"remove.bg devolvió una respuesta inválida: {response.text}")
+
+    if response.status_code >= 400:
+        raise RemoveBgError(f"remove.bg API {response.status_code}: {data}")
+
+    attrs = data.get("data", {}).get("attributes", {})
+    creditos = attrs.get("credits", {})
+    llamadas_gratis = attrs.get("api", {}).get("free_calls", 0)
+
+    return {
+        "creditos_pagos": creditos.get("total", 0),
+        "llamadas_gratis_restantes": llamadas_gratis,
+        "total_disponible": creditos.get("total", 0) + llamadas_gratis,
+    }
