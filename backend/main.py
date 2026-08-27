@@ -232,41 +232,27 @@ async def upload_photo(file: UploadFile = File(...)):
 # ARMARIO DIGITAL
 # =====================================================
 
-def remover_fondo_si_es_posible(image_bytes: bytes) -> tuple[bytes, str]:
-    """Intenta remover el fondo con la IA local 'rembg' (0 créditos API)."""
-    try:
-        from PIL import Image
-        import io
-        img = Image.open(io.BytesIO(image_bytes))
-        if img.mode in ("RGBA", "LA") or (img.mode == "P" and "transparency" in img.info):
-            return image_bytes, ".png"
-    except Exception:
-        pass
 
-    try:
-        from rembg import remove
-        output_png = remove(image_bytes)
-        if output_png and len(output_png) > 100:
-            return output_png, ".png"
-    except Exception as e:
-        print(f"[REMBG WARN] No se pudo remover el fondo (usando original): {e}")
-
-    return image_bytes, ".jpg"
 
 
 @app.post("/armario/subir")
 async def subir_prenda(file: UploadFile = File(...), user_id: int = Depends(obtener_usuario_actual)):
+    """
+    Sube y analiza una prenda nueva para el armario. La remoción de fondo
+    ahora se hace en el navegador del usuario (no en el servidor), para no
+    consumir la memoria limitada del plan gratis de Render.
+    """
     image_bytes = await file.read()
-    processed_bytes, file_ext = remover_fondo_si_es_posible(image_bytes)
-    mime_type = "image/png" if file_ext == ".png" else (file.content_type or "image/jpeg")
+    extension = os.path.splitext(file.filename or "")[1] or ".jpg"
+    mime_type = file.content_type or ("image/png" if extension.lower() == ".png" else "image/jpeg")
 
     try:
         provider = get_provider()
-        analysis = provider.analyze_garment(processed_bytes, mime_type)
+        analysis = provider.analyze_garment(image_bytes, mime_type)
     except Exception as e:
         return {"status": "error", "message": f"No se pudo analizar la imagen: {str(e)}"}
 
-    url = storage.subir_bytes(processed_bytes, carpeta="prendas", extension=file_ext, content_type=mime_type)
+    url = storage.subir_bytes(image_bytes, carpeta="prendas", extension=extension, content_type=mime_type)
 
     tipo = analysis.tipo or "prenda sin identificar"
     colores = ", ".join(analysis.colores) if analysis.colores else ""
@@ -292,7 +278,6 @@ async def subir_prenda(file: UploadFile = File(...), user_id: int = Depends(obte
         "estilo": analysis.estilo,
         "categoria": categoria,
     }
-
 
 @app.get("/armario")
 def obtener_armario(user_id: int = Depends(obtener_usuario_actual)):

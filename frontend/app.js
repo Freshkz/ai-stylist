@@ -6,10 +6,32 @@ const BACKEND_URL = window.location.origin && !window.location.origin.includes("
 // fotos (https://...supabase.co/storage/...). imgUrl() las deja tal cual;
 // solo antepone BACKEND_URL si en algún caso llegara una ruta relativa
 // vieja (ej. datos ya guardados antes de la migración).
+
+// ============================
+// Remoción de fondo (en el navegador, sin costo de servidor)
+// ============================
+
+let _removeBgFn = null;
+
+async function quitarFondo(file) {
+  try {
+    if (!_removeBgFn) {
+      const modulo = await import("@imgly/background-removal");
+      _removeBgFn = modulo.default;
+    }
+    const blob = await _removeBgFn(file);
+    return new File([blob], file.name.replace(/\.[^.]+$/, ".png"), { type: "image/png" });
+  } catch (error) {
+    console.warn("No se pudo quitar el fondo, se sube la imagen original:", error);
+    return file; // si falla, seguimos con la imagen tal cual, sin romper el flujo
+  }
+}
+
 function imgUrl(pathOrUrl) {
   if (!pathOrUrl) return "";
   return pathOrUrl.startsWith("http") ? pathOrUrl : `${BACKEND_URL}${pathOrUrl.startsWith("/") ? "" : "/uploads/"}${pathOrUrl}`;
 }
+
 
 // ============================
 // Sesión (login persistente por navegador, tipo Facebook)
@@ -584,13 +606,12 @@ if (uploadGarmentButton) {
     // de golpe el límite de peticiones por minuto de Groq.
     for (let i = 0; i < total; i++) {
 
-      const file = selectedGarmentFiles[i];
-      uploadGarmentButton.textContent = `✂️ Removiendo fondo y analizando ${i + 1}/${total}...`;
+      let file = selectedGarmentFiles[i];
 
-      if (garmentResponseBox) {
-        garmentResponseBox.className = "response-box";
-        garmentResponseBox.textContent = `✂️ Removiendo fondo con IA local y guardando PNG transparente (${i + 1}/${total})...`;
-      }
+      uploadGarmentButton.textContent = `Quitando fondo ${i + 1}/${total}...`;
+      file = await quitarFondo(file);
+
+      uploadGarmentButton.textContent = `Analizando ${i + 1}/${total}...`;
 
       const formData = new FormData();
       formData.append("file", file);

@@ -8,5 +8,4 @@ groq
 requests
 bcrypt
 PyJWT
-rembg[cpu]
 Pillow
