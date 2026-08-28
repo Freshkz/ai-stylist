@@ -327,12 +327,14 @@ if (sendButton) {
 
         let prendasHtml = "";
         if (a.prendas && a.prendas.length) {
+          const contextoBusqueda = `${a.colores ? a.colores.join(" ") : ""} ${a.estilo || ""}`.trim();
           prendasHtml = `
             <div class="garments-analysis-list">
               <strong class="garments-list-title">👕 PRENDAS IDENTIFICADAS:</strong>
               <div class="garment-items-tags">
                 ${a.prendas.map(prenda => {
-                  const googleShopUrl = `https://www.google.com/search?tbm=shop&q=${encodeURIComponent("comprar " + prenda)}`;
+                  const queryPrecisa = `comprar ${prenda} ${contextoBusqueda}`.trim();
+                  const googleShopUrl = `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(queryPrecisa)}`;
                   return `
                     <div class="garment-analysis-chip">
                       <span class="garment-chip-name">${prenda}</span>
@@ -3096,3 +3098,55 @@ if ("serviceWorker" in navigator && (location.protocol === "https:" || location.
       .catch((error) => console.log("Service Worker no registrado en HTTP:", error));
   });
 }
+
+// =====================================================
+// INICIALIZACIÓN DE REPRODUCTOR DE MÚSICA & SALUDO DINÁMICO
+// =====================================================
+
+function actualizarSaludoDinamico() {
+  const hora = new Date().getHours();
+  let saludoText = "BUENOS DÍAS ☀️";
+  let textoH1 = "Buenos días,";
+
+  if (hora >= 5 && hora < 12) {
+    saludoText = "BUENOS DÍAS ☀️";
+    textoH1 = "Buenos días,";
+  } else if (hora >= 12 && hora < 20) {
+    saludoText = "BUENAS TARDES ☕";
+    textoH1 = "Buenas tardes,";
+  } else {
+    saludoText = "BUENAS NOCHES 🌙";
+    textoH1 = "Buenas noches,";
+  }
+
+  const kicker = document.getElementById("dynamicGreetingKicker");
+  if (kicker) kicker.textContent = `${saludoText} · TU ESTILO, ANALIZADO`;
+
+  const h1Span = document.getElementById("dynamicGreetingH1");
+  if (h1Span) h1Span.textContent = textoH1;
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  actualizarSaludoDinamico();
+
+  const player = document.getElementById("luxuryMusicPlayer");
+  const audio = document.getElementById("atelierAudio");
+  const musicIcon = document.getElementById("musicIcon");
+
+  if (player && audio) {
+    player.addEventListener("click", () => {
+      if (audio.paused) {
+        audio.play().then(() => {
+          player.classList.add("playing");
+          if (musicIcon) musicIcon.textContent = "❚❚";
+        }).catch(err => {
+          console.log("Audio play info:", err);
+        });
+      } else {
+        audio.pause();
+        player.classList.remove("playing");
+        if (musicIcon) musicIcon.textContent = "▶";
+      }
+    });
+  }
+});

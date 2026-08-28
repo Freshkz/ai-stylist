@@ -213,6 +213,22 @@
             ◈
           </button>
 
+          <!-- Reproductor de música Atelier -->
+          <div class="luxury-music-player" id="luxuryMusicPlayer" title="Tocar para reproducir / pausar música">
+            <button type="button" class="music-play-btn" id="musicPlayBtn" aria-label="Música Atelier">
+              <span class="music-icon" id="musicIcon">▶</span>
+            </button>
+            <div class="music-info">
+              <span class="music-title">Música Atelier ✦</span>
+              <div class="music-waves" id="musicWaves">
+                <span class="wave-bar"></span>
+                <span class="wave-bar"></span>
+                <span class="wave-bar"></span>
+              </div>
+            </div>
+            <audio id="atelierAudio" src="music.mp3" preload="metadata" loop></audio>
+          </div>
+
           <div class="topbar-avatar" id="topbarAvatar">
             F
           </div>
@@ -252,12 +268,12 @@
         <div class="section-heading">
 
           <div>
-            <span class="section-kicker">
+            <span class="section-kicker" id="dynamicGreetingKicker">
               TU ESTILO, ANALIZADO
             </span>
 
             <h1>
-              ¿Qué nos<br>
+              <span id="dynamicGreetingH1">¿Qué nos</span><br>
               <em>ponemos hoy?</em>
             </h1>
 
