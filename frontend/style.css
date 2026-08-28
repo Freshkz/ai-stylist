@@ -4030,4 +4030,38 @@ input[type="file"] {
   .mobile-nav-item.active .nav-icon {
     color: var(--gold);
   }
+
+  /* Fix layout aplastado vertical en iPhone para Mi Modelo */
+  .model-profile-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 20px !important;
+    width: 100% !important;
+  }
+
+  .model-card,
+  .model-aside {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .model-dropzone {
+    min-height: 360px !important;
+  }
+
+  .model-photo-preview-wrap {
+    width: 100% !important;
+    max-height: 480px !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+
+  .model-photo-preview-wrap img {
+    max-width: 100% !important;
+    max-height: 440px !important;
+    object-fit: contain !important;
+    border-radius: var(--radius-sm) !important;
+  }
 }
