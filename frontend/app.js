@@ -153,11 +153,31 @@ if (registroForm) {
   });
 }
 
-// --- Al cargar la página: ¿hay sesión guardada? ---
-if (getToken()) {
-  mostrarApp();
+// --- Pantalla de bienvenida especial (una sola vez por dispositivo) ---
+const WELCOME_KEY = "ai_stylist_welcome_seen";
+const welcomeScreen = document.getElementById("welcomeScreen");
+const welcomeEnterBtn = document.getElementById("welcomeEnterBtn");
+
+function continuarDespuesDeBienvenida() {
+  if (welcomeScreen) welcomeScreen.hidden = true;
+  if (getToken()) {
+    mostrarApp();
+  } else {
+    mostrarPantallaLogin();
+  }
+}
+
+if (!localStorage.getItem(WELCOME_KEY)) {
+  if (welcomeScreen) welcomeScreen.hidden = false;
 } else {
-  mostrarPantallaLogin();
+  continuarDespuesDeBienvenida();
+}
+
+if (welcomeEnterBtn) {
+  welcomeEnterBtn.addEventListener("click", () => {
+    localStorage.setItem(WELCOME_KEY, "1");
+    continuarDespuesDeBienvenida();
+  });
 }
 
 // =====================================================
@@ -2585,40 +2605,66 @@ async function cargarEstadoCreditos() {
   const fashnEl = document.getElementById("fashnCreditsValue");
   const groqEl = document.getElementById("groqCreditsValue");
   const removeBgEl = document.getElementById("removeBgCreditsValue");
+  const fashnElMobile = document.getElementById("fashnCreditsValueMobile");
+  const groqElMobile = document.getElementById("groqCreditsValueMobile");
+  const removeBgElMobile = document.getElementById("removeBgCreditsValueMobile");
   if (!fashnEl || !groqEl) return;
+
+  const setText = (el, elMobile, text, low) => {
+    if (el) {
+      el.textContent = text;
+      el.classList.toggle("credits-low", !!low);
+    }
+    if (elMobile) {
+      elMobile.textContent = text;
+      elMobile.classList.toggle("credits-low", !!low);
+    }
+  };
 
   try {
     const res = await fetch(`${BACKEND_URL}/estado/creditos`);
     const data = await res.json();
 
     if (data.fashn && typeof data.fashn.total === "number") {
-      fashnEl.textContent = `${data.fashn.total} créditos`;
-      fashnEl.classList.toggle("credits-low", data.fashn.total <= 5);
+      setText(fashnEl, fashnElMobile, `${data.fashn.total} créditos`, data.fashn.total <= 5);
     } else {
-      fashnEl.textContent = "sin datos";
+      setText(fashnEl, fashnElMobile, "sin datos", false);
     }
 
     const groq = data.groq;
     if (groq && groq.restantes_requests_dia !== null && groq.restantes_requests_dia !== undefined) {
-      groqEl.textContent = `${groq.restantes_requests_dia}/${groq.limite_requests_dia} req`;
+      setText(groqEl, groqElMobile, `${groq.restantes_requests_dia}/${groq.limite_requests_dia} req`, false);
     } else {
-      groqEl.textContent = "aún sin usar";
+      setText(groqEl, groqElMobile, "aún sin usar", false);
     }
 
-    if (removeBgEl) {
-      const removeBg = data.remove_bg;
-      if (removeBg && typeof removeBg.total_disponible === "number") {
-        removeBgEl.textContent = `${removeBg.total_disponible} fotos`;
-        removeBgEl.classList.toggle("credits-low", removeBg.total_disponible <= 5);
-      } else {
-        removeBgEl.textContent = "sin datos";
-      }
+    const removeBg = data.remove_bg;
+    if (removeBg && typeof removeBg.total_disponible === "number") {
+      setText(removeBgEl, removeBgElMobile, `${removeBg.total_disponible} fotos`, removeBg.total_disponible <= 5);
+    } else {
+      setText(removeBgEl, removeBgElMobile, "sin datos", false);
     }
   } catch (error) {
-    fashnEl.textContent = "error";
-    groqEl.textContent = "error";
-    if (removeBgEl) removeBgEl.textContent = "error";
+    setText(fashnEl, fashnElMobile, "error", false);
+    setText(groqEl, groqElMobile, "error", false);
+    setText(removeBgEl, removeBgElMobile, "error", false);
   }
+}
+
+const topbarCreditsToggle = document.getElementById("topbarCreditsToggle");
+const topbarCreditsPopover = document.getElementById("topbarCreditsPopover");
+
+if (topbarCreditsToggle && topbarCreditsPopover) {
+  topbarCreditsToggle.addEventListener("click", (e) => {
+    e.stopPropagation();
+    topbarCreditsPopover.hidden = !topbarCreditsPopover.hidden;
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!topbarCreditsPopover.hidden && !topbarCreditsPopover.contains(e.target) && e.target !== topbarCreditsToggle) {
+      topbarCreditsPopover.hidden = true;
+    }
+  });
 }
 
 cargarEstadoCreditos();

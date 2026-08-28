@@ -23,6 +23,21 @@
 
 <body>
 
+  <div id="welcomeScreen" class="welcome-screen" hidden>
+    <div class="welcome-card">
+      <span class="welcome-mark">✦</span>
+      <h1>Bienvenido a tu Atelier ❤️</h1>
+      <p>
+        Este lugar lo hice especialmente para vos.<br>
+        Porque sé que te gusta la ropa, probar cosas nuevas y jugar con
+        diferentes estilos... pero principalmente porque quería hacerte
+        algo que fuera solamente tuyo.
+      </p>
+      <p class="welcome-signoff">Feliz cumple mes ❤️</p>
+      <button type="button" class="welcome-enter-btn" id="welcomeEnterBtn">ENTRAR A MI ATELIER ✨</button>
+    </div>
+  </div>
+
   <div id="authScreen" class="auth-screen" hidden>
     <div class="auth-card">
       <div class="auth-brand">
@@ -194,6 +209,10 @@
             ♡
           </button>
 
+          <button class="topbar-icon topbar-credits-toggle" id="topbarCreditsToggle" aria-label="Créditos">
+            ◈
+          </button>
+
           <div class="topbar-avatar" id="topbarAvatar">
             F
           </div>
@@ -201,6 +220,26 @@
         </div>
 
       </header>
+
+      <div class="topbar-credits-popover" id="topbarCreditsPopover" hidden>
+        <div class="credits-status" id="creditsStatusMobile">
+          <div class="credits-status-row">
+            <span class="credits-status-dot"></span>
+            <span class="credits-status-label">Fashn AI</span>
+            <span class="credits-status-value" id="fashnCreditsValueMobile">—</span>
+          </div>
+          <div class="credits-status-row">
+            <span class="credits-status-dot credits-status-dot-groq"></span>
+            <span class="credits-status-label">Groq (hoy)</span>
+            <span class="credits-status-value" id="groqCreditsValueMobile">—</span>
+          </div>
+          <div class="credits-status-row">
+            <span class="credits-status-dot credits-status-dot-removebg"></span>
+            <span class="credits-status-label">remove.bg (mes)</span>
+            <span class="credits-status-value" id="removeBgCreditsValueMobile">—</span>
+          </div>
+        </div>
+      </div>
 
 
       <!-- ======================================

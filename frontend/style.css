@@ -533,6 +533,32 @@ em {
   background: rgba(255,255,255,.05);
 }
 
+.topbar-credits-toggle {
+  display: none;
+}
+
+.topbar-credits-popover {
+  display: none;
+  position: fixed;
+  top: 68px;
+  right: 14px;
+  z-index: 50;
+  width: min(240px, calc(100vw - 28px));
+}
+
+.topbar-credits-popover[hidden] {
+  display: none;
+}
+
+.topbar-credits-popover:not([hidden]) {
+  display: block;
+}
+
+.topbar-credits-popover .credits-status {
+  margin-bottom: 0;
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+}
+
 .topbar-avatar {
   width: 34px;
   height: 34px;
@@ -1830,6 +1856,10 @@ input[type="file"] {
     grid-template-columns: 1fr;
   }
 
+  .model-profile-layout {
+    grid-template-columns: 1fr;
+  }
+
   .analysis-aside {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1876,6 +1906,10 @@ input[type="file"] {
 
     font-size: 13px;
     font-weight: 600;
+  }
+
+  .topbar-credits-toggle {
+    display: grid;
   }
 
   .mobile-brand-mark {
@@ -3519,6 +3553,88 @@ input[type="file"] {
 
 .auth-screen[hidden] {
   display: none;
+}
+
+.welcome-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(201,166,107,0.14), transparent 45%),
+    radial-gradient(circle at 80% 80%, rgba(201,166,107,0.08), transparent 40%),
+    var(--bg);
+  padding: 24px;
+}
+
+.welcome-screen[hidden] {
+  display: none;
+}
+
+.welcome-card {
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 48px 32px;
+  animation: welcomeFadeIn 0.6s ease;
+}
+
+@keyframes welcomeFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.welcome-mark {
+  display: inline-block;
+  color: var(--gold);
+  font-size: 26px;
+  margin-bottom: 18px;
+}
+
+.welcome-card h1 {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 26px;
+  color: var(--text);
+  margin: 0 0 18px;
+  line-height: 1.35;
+}
+
+.welcome-card p {
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.7;
+  margin: 0 0 16px;
+}
+
+.welcome-signoff {
+  color: var(--gold) !important;
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 16px !important;
+  margin-bottom: 28px !important;
+}
+
+.welcome-enter-btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--gold);
+  color: var(--accent-dark);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.welcome-enter-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 .outfit-delete-btn {
