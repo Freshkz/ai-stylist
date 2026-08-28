@@ -3431,6 +3431,48 @@ input[type="file"] {
   justify-content: center;
 }
 
+@media (max-width: 768px) {
+  .modal-overlay {
+    align-items: flex-start;
+    overflow-y: auto;
+    padding: max(12px, env(safe-area-inset-top)) 12px
+      max(12px, env(safe-area-inset-bottom));
+  }
+
+  .modal-tryon-box {
+    width: 100%;
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+    padding: 18px 14px;
+    margin: 0;
+  }
+
+  .tryon-modal-header h2 {
+    font-size: 22px;
+  }
+
+  .tryon-modal-image-wrap {
+    max-height: 52dvh;
+    margin: 12px 0;
+  }
+
+  .tryon-modal-image-wrap img {
+    max-height: 52dvh;
+  }
+
+  .tryon-modal-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tryon-modal-actions .auth-form-input-standalone,
+  .tryon-modal-actions button {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
+
 .missing-photo-icon {
   width: 50px;
   height: 50px;
