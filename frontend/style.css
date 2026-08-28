@@ -1039,6 +1039,7 @@ em {
 .mini-feature {
   display: flex;
   align-items: center;
+  min-height: 58px;
   gap: 12px;
 
   padding: 12px 0;
@@ -1056,11 +1057,13 @@ em {
 }
 
 .mini-feature-icon {
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
 
   display: grid;
   place-items: center;
+  align-self: center;
 
   border: 1px solid var(--line);
 
@@ -1070,6 +1073,8 @@ em {
   background: linear-gradient(145deg, var(--gold-soft), rgba(255,255,255,.03));
   box-shadow: inset 0 0 14px rgba(201,166,107,.08), 0 5px 14px rgba(0,0,0,.16);
   font-size: 15px;
+  line-height: 1;
+  text-align: center;
   flex-shrink: 0;
 }
 
@@ -1091,9 +1096,18 @@ em {
 }
 
 .topbar-actions .luxury-music-player,
-.topbar-actions .vip-atelier-badge,
 .topbar-actions > .topbar-icon:not(.topbar-credits-toggle) {
   display: none;
+}
+
+.topbar-actions .vip-atelier-badge {
+  display: inline-flex;
+  max-width: 28px;
+  overflow: hidden;
+  padding: 4px 7px;
+  margin-left: 2px;
+  letter-spacing: 0;
+  font-size: 12px;
 }
 
 .topbar-avatar {
@@ -4416,6 +4430,15 @@ body::before {
   cursor: pointer;
   user-select: none;
   transition: all 0.25s ease;
+}
+
+@media (min-width: 769px) {
+  .topbar-actions .luxury-music-player {
+    display: inline-flex;
+    background: #141519;
+    border-color: rgba(255,255,255,.1);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 6px 18px rgba(0,0,0,.2);
+  }
 }
 
 .luxury-music-player:hover {
