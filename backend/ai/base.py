@@ -8,23 +8,23 @@ que proveedor esta usando por detras.
 """
 
 from abc import ABC, abstractmethod
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List
 
 
 class StyleAnalysis(BaseModel):
     """Resultado estructurado del analisis universal de estilo."""
 
-    prendas: List[str]
-    colores: List[str]
-    estilo: str
-    descripcion: str
-    recomendaciones: List[str] = []
+    prendas: List[str] = Field(default_factory=list)
+    colores: List[str] = Field(default_factory=list)
+    estilo: str = "Estilo personal"
+    descripcion: str = "No se recibió una descripción detallada de la imagen."
+    recomendaciones: List[str] = Field(default_factory=list)
     tipo_imagen: str = "outfit"
     detalles_prenda: str = ""
     como_favorece: str = ""
-    combinaciones: List[str] = []
-    ocasiones: List[str] = []
+    combinaciones: List[str] = Field(default_factory=list)
+    ocasiones: List[str] = Field(default_factory=list)
     busqueda_compra: str = ""
 
 
