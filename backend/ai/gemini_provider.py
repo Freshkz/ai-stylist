@@ -9,6 +9,7 @@ from google.genai import types
 from .base import (
     AIProvider,
     StyleAnalysis,
+    StructuredStyleAnalysis,
     GarmentAnalysis,
     OutfitSuggestions,
     GARMENT_PROMPT,
@@ -66,10 +67,10 @@ class GeminiProvider(AIProvider):
             contents=contents,
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
-                response_schema=StyleAnalysis,
+                response_schema=StructuredStyleAnalysis,
             ),
         )
-        return response.parsed
+        return StyleAnalysis(**response.parsed.model_dump())
 
     def analyze_garment(self, image_bytes: bytes, mime_type: str) -> GarmentAnalysis:
         response = self.client.models.generate_content(

@@ -28,6 +28,22 @@ class StyleAnalysis(BaseModel):
     busqueda_compra: str = ""
 
 
+class StructuredStyleAnalysis(BaseModel):
+    """Esquema estricto usado para pedir todos los campos a proveedores estructurados."""
+
+    prendas: List[str]
+    colores: List[str]
+    estilo: str
+    descripcion: str
+    recomendaciones: List[str]
+    tipo_imagen: str
+    detalles_prenda: str
+    como_favorece: str
+    combinaciones: List[str]
+    ocasiones: List[str]
+    busqueda_compra: str
+
+
 class Outfit(BaseModel):
     """Una combinacion de outfit sugerida."""
 
