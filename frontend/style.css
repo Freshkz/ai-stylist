@@ -3998,6 +3998,19 @@ input[type="file"] {
 }
 
 @media (max-width: 768px) {
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+
   .sidebar {
     display: none !important;
   }
@@ -4054,6 +4067,10 @@ input[type="file"] {
 
   .mobile-nav-item.active .nav-icon {
     color: var(--gold);
+  }
+
+  .garment-card {
+    transform: none !important;
   }
 
   /* Fix layout aplastado vertical en iPhone para Mi Modelo */
