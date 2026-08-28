@@ -1,7 +1,9 @@
 venv/
 .env
+backend/.env
 uploads/
 __pycache__/
 *.pyc
 armario.db
 *.bak
+backend/prendas_para_subir/

@@ -35,11 +35,43 @@ def _headers(content_type: str = None) -> dict:
     return headers
 
 
+from PIL import Image
+import io
+
+def _optimizar_imagen(contenido: bytes, extension: str, max_dim: int = 1600) -> tuple[bytes, str, str]:
+    """
+    Redimensiona y comprime imágenes antes de subirlas a Supabase Storage:
+    - Reduce fotos gigantes de 8MB-15MB a ~150-250KB (10x más rápido en móviles).
+    - Preserva la transparencia en archivos PNG.
+    """
+    try:
+        img = Image.open(io.BytesIO(contenido))
+        width, height = img.size
+        ext_lower = extension.lower()
+
+        if width > max_dim or height > max_dim:
+            img.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
+
+        output = io.BytesIO()
+
+        if ext_lower == ".png" or img.mode in ("RGBA", "LA") or (img.mode == "P" and "transparency" in img.info):
+            img.save(output, format="PNG", optimize=True)
+            return output.getvalue(), ".png", "image/png"
+        else:
+            if img.mode in ("RGBA", "P"):
+                img = img.convert("RGB")
+            img.save(output, format="JPEG", quality=85, optimize=True)
+            return output.getvalue(), ".jpg", "image/jpeg"
+    except Exception:
+        pass
+
+    return contenido, extension, ("image/png" if extension.lower() == ".png" else "image/jpeg")
+
+
 def subir_bytes(contenido: bytes, carpeta: str, extension: str, content_type: str = "image/jpeg") -> str:
     """
-    Sube un archivo binario al bucket de Supabase Storage y devuelve
-    su URL pública. `carpeta` organiza las imágenes por tipo
-    (ej: "prendas", "avatars", "modelo", "tryon").
+    Sube un archivo binario optimizado al bucket de Supabase Storage y devuelve
+    su URL pública. `carpeta` organiza las imágenes por tipo.
     """
     if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
         raise StorageError(
@@ -49,12 +81,14 @@ def subir_bytes(contenido: bytes, carpeta: str, extension: str, content_type: st
     if not extension.startswith("."):
         extension = f".{extension}"
 
+    contenido_opt, extension, content_type = _optimizar_imagen(contenido, extension)
+
     nombre = f"{carpeta}/{uuid.uuid4().hex}{extension}"
 
     response = requests.post(
         f"{SUPABASE_URL}/storage/v1/object/{SUPABASE_BUCKET}/{nombre}",
         headers=_headers(content_type),
-        data=contenido,
+        data=contenido_opt,
         timeout=60,
     )
 

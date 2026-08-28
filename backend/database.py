@@ -18,6 +18,7 @@ el id). Cada función deja un comentario aclarando esto donde aplica.
 import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
+import psycopg2.pool
 from dotenv import load_dotenv
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -25,23 +26,59 @@ load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+_pool = None
+
+
+def get_pool():
+    global _pool
+    if _pool is None or _pool.closed:
+        if not DATABASE_URL:
+            raise RuntimeError("Falta DATABASE_URL en el archivo .env.")
+        _pool = psycopg2.pool.ThreadedConnectionPool(
+            minconn=1,
+            maxconn=10,
+            dsn=DATABASE_URL,
+            cursor_factory=RealDictCursor,
+        )
+    return _pool
+
+
+class PooledConnection:
+    """Wrapper transparente para devolver la conexión al Pool al llamar a .close()."""
+    def __init__(self, real_conn):
+        self._conn = real_conn
+
+    def __getattr__(self, name):
+        return getattr(self._conn, name)
+
+    def close(self):
+        try:
+            pool = get_pool()
+            if pool and not pool.closed:
+                pool.putconn(self._conn)
+                return
+        except Exception:
+            pass
+        try:
+            self._conn.close()
+        except Exception:
+            pass
+
 
 def get_connection():
-    """Abre una conexión a Postgres. Cada función abre y cierra la suya
-    (igual que antes con SQLite) — el modo 'Transaction pooler' de
-    Supabase está pensado exactamente para este patrón de uso."""
+    """Devuelve una conexión reutilizable desde el Pool de Postgres."""
     if not DATABASE_URL:
-        raise RuntimeError(
-            "Falta DATABASE_URL en el archivo .env. Copiá la cadena de "
-            "conexión desde Supabase (botón 'Connect' → Direct → "
-            "Transaction pooler)."
-        )
-    conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
-    return conn
+        raise RuntimeError("Falta DATABASE_URL en el archivo .env.")
+    try:
+        pool = get_pool()
+        real_conn = pool.getconn()
+        return PooledConnection(real_conn)
+    except Exception:
+        return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
 
 def init_db():
-    """Crea las tablas si no existen. Seguro de correr múltiples veces."""
+    """Crea las tablas si no existen y asegura columnas faltantes."""
     conn = get_connection()
     cur = conn.cursor()
 
@@ -55,6 +92,15 @@ def init_db():
             created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )
     """)
+
+    # Migraciones seguras para asegurar columnas en Supabase
+    try:
+        cur.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar TEXT;")
+        cur.execute("ALTER TABLE prendas ADD COLUMN IF NOT EXISTS categoria TEXT DEFAULT 'otros';")
+        cur.execute("ALTER TABLE outfits ADD COLUMN IF NOT EXISTS imagen TEXT;")
+        conn.commit()
+    except Exception:
+        pass
 
     cur.execute("""
         CREATE TABLE IF NOT EXISTS user_profile (

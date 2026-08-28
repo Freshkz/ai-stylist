@@ -14,6 +14,7 @@ Este backend:
 from fastapi import FastAPI, UploadFile, File, Form, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.concurrency import run_in_threadpool
 from dotenv import load_dotenv
 from pydantic import BaseModel
 import os
@@ -180,10 +181,12 @@ async def subir_foto_corporal(file: UploadFile = File(...), user_id: int = Depen
 
     foto_vieja = obtener_foto_corporal(user_id)
 
-    url = storage.subir_bytes(contenido, carpeta="modelo", extension=extension, content_type=file.content_type or "image/jpeg")
+    url = await run_in_threadpool(
+        storage.subir_bytes, contenido, carpeta="modelo", extension=extension, content_type=file.content_type or "image/jpeg"
+    )
 
     if foto_vieja:
-        storage.eliminar_archivo(foto_vieja)
+        await run_in_threadpool(storage.eliminar_archivo, foto_vieja)
 
     guardar_foto_corporal(user_id, url)
 
@@ -199,10 +202,10 @@ def ver_foto_corporal(user_id: int = Depends(obtener_usuario_actual)):
 
 
 @app.delete("/perfil/modelo")
-def borrar_foto_corporal(user_id: int = Depends(obtener_usuario_actual)):
+async def borrar_foto_corporal(user_id: int = Depends(obtener_usuario_actual)):
     foto_borrada = eliminar_foto_corporal(user_id)
     if foto_borrada:
-        storage.eliminar_archivo(foto_borrada)
+        await run_in_threadpool(storage.eliminar_archivo, foto_borrada)
     return {"status": "success", "message": "Foto corporal eliminada."}
 
 
@@ -217,7 +220,7 @@ async def upload_photo(file: UploadFile = File(...)):
 
     try:
         provider = get_provider()
-        analysis = provider.analyze_image(image_bytes, mime_type)
+        analysis = await run_in_threadpool(provider.analyze_image, image_bytes, mime_type)
     except Exception as e:
         return {"status": "error", "message": f"No se pudo analizar la imagen: {str(e)}"}
 
@@ -251,19 +254,19 @@ async def subir_prenda(file: UploadFile = File(...), user_id: int = Depends(obte
 
     try:
         provider = get_provider()
-        analysis = provider.analyze_garment(image_bytes, mime_type)
+        analysis = await run_in_threadpool(provider.analyze_garment, image_bytes, mime_type)
     except Exception as e:
         return {"status": "error", "message": f"No se pudo analizar la imagen: {str(e)}"}
 
     try:
-        processed_bytes = quitar_fondo(image_bytes)
+        processed_bytes = await run_in_threadpool(quitar_fondo, image_bytes)
         extension = ".png"
         mime_type = "image/png"
     except RemoveBgError as e:
         print(f"[REMOVE.BG WARN] No se pudo quitar el fondo, se sube la imagen original: {e}")
         processed_bytes = image_bytes
 
-    url = storage.subir_bytes(processed_bytes, carpeta="prendas", extension=extension, content_type=mime_type)
+    url = await run_in_threadpool(storage.subir_bytes, processed_bytes, carpeta="prendas", extension=extension, content_type=mime_type)
 
     tipo = analysis.tipo or "prenda sin identificar"
     colores = ", ".join(analysis.colores) if analysis.colores else ""
@@ -303,7 +306,7 @@ def obtener_armario(user_id: int = Depends(obtener_usuario_actual)):
 
 
 @app.delete("/armario/{prenda_id}")
-def borrar_prenda(prenda_id: int, user_id: int = Depends(obtener_usuario_actual)):
+async def borrar_prenda(prenda_id: int, user_id: int = Depends(obtener_usuario_actual)):
     prenda = obtener_prenda(prenda_id, user_id=user_id)
     if not prenda:
         return {"status": "error", "message": "No se encontró esa prenda"}
@@ -312,7 +315,7 @@ def borrar_prenda(prenda_id: int, user_id: int = Depends(obtener_usuario_actual)
     if not eliminado:
         return {"status": "error", "message": "No se pudo eliminar la prenda"}
 
-    storage.eliminar_archivo(prenda["archivo"])
+    await run_in_threadpool(storage.eliminar_archivo, prenda["archivo"])
     return {"status": "success", "id": prenda_id}
 
 
