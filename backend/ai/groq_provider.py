@@ -51,6 +51,13 @@ piel, ojos y cabello únicamente cuando sean visibles. No inventes rasgos.
 Usá el nombre indicado y un tono amoroso, como un regalo especial para ella.
 No seas breve: cada explicación debe tener varias oraciones y consejos
 concretos.
+
+IMPORTANTE: las 11 claves son obligatorias y deben aparecer siempre en el JSON,
+aunque alguna información no sea visible. Nunca omitas una clave ni uses nombres
+alternativos. Si no podés determinar un texto, devolvé una explicación breve en
+esa clave; para listas, devolvé una lista vacía. Si existe la referencia de
+"Mi modelo", completá obligatoriamente "como_favorece" comparando el look con
+esa persona sin inventar rasgos.
 """
 
 
@@ -138,7 +145,7 @@ class GroqProvider(AIProvider):
                 }
             ],
             temperature=0.3,
-            max_completion_tokens=1536,
+            max_completion_tokens=3072,
             response_format={"type": "json_object"},
             reasoning_effort="none",
         )
