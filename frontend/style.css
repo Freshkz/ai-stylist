@@ -3183,8 +3183,6 @@ input[type="file"] {
 
 .model-card {
   position: relative;
-  width: 100%;
-  box-sizing: border-box;
   padding: 24px;
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
@@ -3222,9 +3220,10 @@ input[type="file"] {
 }
 
 .model-dropzone {
-  width: 100%;
-  box-sizing: border-box;
   min-height: 440px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 1px dashed rgba(255,255,255,.14);
   border-radius: var(--radius-md);
   background: radial-gradient(circle at center, rgba(255,255,255,.02), transparent 60%);
@@ -3232,6 +3231,7 @@ input[type="file"] {
   overflow: hidden;
   position: relative;
 }
+
 .model-dropzone:hover {
   border-color: var(--gold);
 }
@@ -3239,16 +3239,8 @@ input[type="file"] {
 .model-dropzone-empty {
   text-align: center;
   padding: 30px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 440px;
 }
 
-.model-dropzone-empty[hidden] {
-  display: none;
-}
 .model-dropzone-empty h3 {
   font-size: 18px;
   margin-bottom: 6px;
@@ -3261,19 +3253,17 @@ input[type="file"] {
 
 .model-photo-preview-wrap {
   width: 100%;
-  box-sizing: border-box;
   max-height: 520px;
   position: relative;
-  text-align: center;
-  padding: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .model-photo-preview-wrap[hidden] {
   display: none;
 }
 .model-photo-preview-wrap img {
-  display: block;
-  margin: 0 auto;
   max-width: 100%;
   max-height: 500px;
   object-fit: contain;
