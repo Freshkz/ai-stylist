@@ -4218,6 +4218,31 @@ body::before {
   line-height: 1.5;
 }
 
+.analysis-detail-block {
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.65;
+}
+
+.analysis-detail-block strong {
+  display: block;
+  color: var(--gold);
+  font-size: 10px;
+  letter-spacing: .1em;
+  margin-bottom: 4px;
+}
+
+.analysis-detail-block p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.analysis-detail-block ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text-muted);
+}
+
 .analysis-recom-title {
   font-size: 10px;
   letter-spacing: .12em;

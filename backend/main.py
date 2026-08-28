@@ -214,13 +214,28 @@ async def borrar_foto_corporal(user_id: int = Depends(obtener_usuario_actual)):
 # =====================================================
 
 @app.post("/upload")
-async def upload_photo(file: UploadFile = File(...)):
+async def upload_photo(file: UploadFile = File(...), user_id: int = Depends(obtener_usuario_actual)):
     image_bytes = await file.read()
     mime_type = file.content_type or "image/jpeg"
+    reference_image = None
+    reference_mime_type = "image/jpeg"
+    reference_url = obtener_foto_corporal(user_id)
+    usuario = obtener_usuario_por_id(user_id)
+    user_name = usuario["name"] if usuario else ""
+
+    if reference_url:
+        reference_image = await run_in_threadpool(storage.descargar_bytes, reference_url)
 
     try:
         provider = get_provider()
-        analysis = await run_in_threadpool(provider.analyze_image, image_bytes, mime_type)
+        analysis = await run_in_threadpool(
+            provider.analyze_image,
+            image_bytes,
+            mime_type,
+            reference_image,
+            reference_mime_type,
+            user_name,
+        )
     except Exception as e:
         return {"status": "error", "message": f"No se pudo analizar la imagen: {str(e)}"}
 

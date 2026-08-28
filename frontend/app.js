@@ -360,9 +360,15 @@ if (sendButton) {
           <div class="analysis-card-response">
             <div class="analysis-status-header">✓ Foto analizada con éxito por tu estilista IA</div>
             ${prendasHtml}
+            ${a.tipo_imagen ? `<div class="analysis-detail-row"><strong>🖼️ Tipo:</strong> ${a.tipo_imagen}</div>` : ""}
             <div class="analysis-detail-row"><strong>🎨 Colores:</strong> ${a.colores ? a.colores.join(", ") : "variados"}</div>
             <div class="analysis-detail-row"><strong>✨ Estilo:</strong> ${a.estilo || "Personal"}</div>
             <div class="analysis-detail-desc">${a.descripcion || ""}</div>
+            ${a.detalles_prenda ? `<div class="analysis-detail-block"><strong>🔎 DETALLES:</strong><p>${a.detalles_prenda}</p></div>` : ""}
+            ${a.como_favorece ? `<div class="analysis-detail-block"><strong>💛 PENSADO PARA VOS:</strong><p>${a.como_favorece}</p></div>` : ""}
+            ${a.combinaciones && a.combinaciones.length ? `<div class="analysis-detail-block"><strong>👗 CÓMO COMBINARLO:</strong><ul>${a.combinaciones.map(item => `<li>${item}</li>`).join("")}</ul></div>` : ""}
+            ${a.ocasiones && a.ocasiones.length ? `<div class="analysis-detail-row"><strong>📍 Ocasiones:</strong> ${a.ocasiones.join(" · ")}</div>` : ""}
+            ${a.busqueda_compra ? `<div class="analysis-detail-block"><strong>🛍️ PARA BUSCAR:</strong><p>${a.busqueda_compra}</p></div>` : ""}
             ${a.recomendaciones && a.recomendaciones.length ? `
               <div class="analysis-recom-title">💡 RECOMENDACIONES DE ESTILO:</div>
               <ul class="analysis-recom-list">

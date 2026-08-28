@@ -37,23 +37,20 @@ def _redimensionar_si_excede_limite(image_bytes: bytes, max_dim: int = 1920) -> 
 
 
 STYLIST_PROMPT = """
-Sos un asistente de moda. Analiza la foto de cuerpo completo de esta persona
-y devolve UNICAMENTE un objeto JSON (sin texto adicional, sin markdown) con
-esta forma exacta:
+Sos una estilista personal experta, cálida y detallista. Analizá la imagen
+principal y detectá si muestra una persona con outfit, varias prendas o una
+sola prenda. La segunda imagen, si existe, es la referencia privada de
+"Mi modelo".
 
-{
-  "prendas": ["prenda 1", "prenda 2"],
-  "colores": ["color 1", "color 2"],
-  "estilo": "estilo en 2-3 palabras",
-  "descripcion": "una sola oracion breve",
-  "recomendaciones": ["sugerencia 1 breve", "sugerencia 2 breve"]
-}
-
-Se breve en cada campo: cada prenda y color como una sola palabra o frase
-corta, la descripcion en una sola oracion, y solo 2 recomendaciones breves
-(no 3). Esto es importante porque hay un limite de espacio en la respuesta.
-No inventes detalles que no puedas ver claramente en la imagen. Generá
-siempre las 5 claves del JSON completas, sin cortar el texto a la mitad.
+Devolvé SOLO JSON con estas claves: prendas (lista), colores (lista), estilo,
+descripcion extensa, recomendaciones (3 elementos detallados), tipo_imagen
+(outfit/prenda/conjunto), detalles_prenda, como_favorece, combinaciones (3
+combinaciones concretas aunque no estén en el armario), ocasiones (lista) y
+busqueda_compra. Compará con la referencia para personalizar proporciones,
+piel, ojos y cabello únicamente cuando sean visibles. No inventes rasgos.
+Usá el nombre indicado y un tono amoroso, como un regalo especial para ella.
+No seas breve: cada explicación debe tener varias oraciones y consejos
+concretos.
 """
 
 
@@ -121,28 +118,27 @@ class GroqProvider(AIProvider):
             )
         self.client = Groq(api_key=api_key)
 
-    def analyze_image(self, image_bytes: bytes, mime_type: str) -> StyleAnalysis:
+    def analyze_image(self, image_bytes, mime_type, reference_image=None, reference_mime_type="image/jpeg", user_name=""):
         image_bytes = _redimensionar_si_excede_limite(image_bytes)
         base64_image = base64.b64encode(image_bytes).decode("utf-8")
+        content = [{"type": "text", "text": STYLIST_PROMPT + (f"\nNombre: {user_name}" if user_name else "")}]
+        content.append({"type": "image_url", "image_url": {"url": f"data:{mime_type};base64,{base64_image}"}})
+        if reference_image:
+            reference_image = _redimensionar_si_excede_limite(reference_image)
+            reference_base64 = base64.b64encode(reference_image).decode("utf-8")
+            content.append({"type": "text", "text": "Referencia de Mi modelo:"})
+            content.append({"type": "image_url", "image_url": {"url": f"data:{reference_mime_type};base64,{reference_base64}"}})
 
         raw_response = self.client.chat.completions.with_raw_response.create(
             model="qwen/qwen3.6-27b",
             messages=[
                 {
                     "role": "user",
-                    "content": [
-                        {"type": "text", "text": STYLIST_PROMPT},
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:{mime_type};base64,{base64_image}"
-                            },
-                        },
-                    ],
+                    "content": content,
                 }
             ],
             temperature=0.3,
-            max_completion_tokens=512,
+            max_completion_tokens=1536,
             response_format={"type": "json_object"},
             reasoning_effort="none",
         )

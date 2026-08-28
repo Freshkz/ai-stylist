@@ -13,13 +13,19 @@ from typing import List
 
 
 class StyleAnalysis(BaseModel):
-    """Resultado estructurado del analisis de una foto."""
+    """Resultado estructurado del analisis universal de estilo."""
 
     prendas: List[str]
     colores: List[str]
     estilo: str
     descripcion: str
     recomendaciones: List[str] = []
+    tipo_imagen: str = "outfit"
+    detalles_prenda: str = ""
+    como_favorece: str = ""
+    combinaciones: List[str] = []
+    ocasiones: List[str] = []
+    busqueda_compra: str = ""
 
 
 class Outfit(BaseModel):
@@ -113,7 +119,14 @@ class AIProvider(ABC):
     """Interfaz que debe cumplir cualquier proveedor de IA."""
 
     @abstractmethod
-    def analyze_image(self, image_bytes: bytes, mime_type: str) -> StyleAnalysis:
+    def analyze_image(
+        self,
+        image_bytes: bytes,
+        mime_type: str,
+        reference_image: bytes | None = None,
+        reference_mime_type: str = "image/jpeg",
+        user_name: str = "",
+    ) -> StyleAnalysis:
         """
         Recibe los bytes de una imagen y devuelve un StyleAnalysis.
         Cada proveedor concreto implementa esto a su manera.
