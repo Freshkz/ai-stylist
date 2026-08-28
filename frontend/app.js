@@ -114,9 +114,12 @@ if (loginForm) {
         return;
       }
 
+      if (data.user && data.user.name) {
+        localStorage.setItem("ai_stylist_user_name", data.user.name);
+      }
       guardarSesion(data.token);
       mostrarApp();
-      location.reload(); // recarga limpia para que todo el armario cargue con la sesión activa
+      location.reload();
     } catch (error) {
       errorEl.textContent = "No se pudo conectar con el servidor.";
       errorEl.hidden = false;
@@ -150,6 +153,9 @@ if (registroForm) {
         return;
       }
 
+      if (data.user && data.user.name) {
+        localStorage.setItem("ai_stylist_user_name", data.user.name);
+      }
       guardarSesion(data.token);
       mostrarApp();
       location.reload();
@@ -3117,6 +3123,12 @@ function actualizarSaludoDinamico() {
   } else {
     saludoText = "BUENAS NOCHES 🌙";
     textoH1 = "Buenas noches,";
+  }
+
+  const nombreUsuario = (localStorage.getItem("ai_stylist_user_name") || "").trim();
+  if (nombreUsuario) {
+    const primerNombre = nombreUsuario.split(" ")[0];
+    textoH1 = textoH1.replace(",", `, ${primerNombre},`);
   }
 
   const kicker = document.getElementById("dynamicGreetingKicker");
