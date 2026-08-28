@@ -3183,6 +3183,8 @@ input[type="file"] {
 
 .model-card {
   position: relative;
+  width: 100%;
+  box-sizing: border-box;
   padding: 24px;
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
@@ -3220,6 +3222,8 @@ input[type="file"] {
 }
 
 .model-dropzone {
+  width: 100%;
+  box-sizing: border-box;
   min-height: 440px;
   display: flex;
   align-items: center;
