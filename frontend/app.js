@@ -27,6 +27,13 @@ function imgUrl(pathOrUrl) {
 
 const TOKEN_KEY = "ai_stylist_token";
 
+function getSaludoDinamico() {
+  const hora = new Date().getHours();
+  if (hora >= 5 && hora < 12) return "BUENOS DÍAS ☀️";
+  if (hora >= 12 && hora < 20) return "BUENAS TARDES ☕";
+  return "BUENAS NOCHES 🌙";
+}
+
 function getToken() {
   return localStorage.getItem(TOKEN_KEY);
 }
@@ -318,31 +325,44 @@ if (sendButton) {
             : "(sin recomendaciones esta vez)";
 
 
-        responseBox.classList.add(
-          "success"
-        );
+        let prendasHtml = "";
+        if (a.prendas && a.prendas.length) {
+          prendasHtml = `
+            <div class="garments-analysis-list">
+              <strong class="garments-list-title">👕 PRENDAS IDENTIFICADAS:</strong>
+              <div class="garment-items-tags">
+                ${a.prendas.map(prenda => {
+                  const googleShopUrl = `https://www.google.com/search?tbm=shop&q=${encodeURIComponent("comprar " + prenda)}`;
+                  return `
+                    <div class="garment-analysis-chip">
+                      <span class="garment-chip-name">${prenda}</span>
+                      <a href="${googleShopUrl}" target="_blank" rel="noopener" class="shop-search-link" title="Buscar ropa similar en tiendas online">
+                        🔍 Comprar similar ↗
+                      </a>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          `;
+        }
 
-
-        responseBox.textContent =
-          `✓ ${data.message}\n\n` +
-
-          `👕 Prendas: ${
-            a.prendas.join(", ")
-          }\n` +
-
-          `🎨 Colores: ${
-            a.colores.join(", ")
-          }\n` +
-
-          `✨ Estilo: ${
-            a.estilo
-          }\n\n` +
-
-          `${a.descripcion}\n\n` +
-
-          `💡 Recomendaciones:\n${
-            recomendacionesTexto
-          }`;
+        responseBox.classList.add("success");
+        responseBox.innerHTML = `
+          <div class="analysis-card-response">
+            <div class="analysis-status-header">✓ Foto analizada con éxito por tu estilista IA</div>
+            ${prendasHtml}
+            <div class="analysis-detail-row"><strong>🎨 Colores:</strong> ${a.colores ? a.colores.join(", ") : "variados"}</div>
+            <div class="analysis-detail-row"><strong>✨ Estilo:</strong> ${a.estilo || "Personal"}</div>
+            <div class="analysis-detail-desc">${a.descripcion || ""}</div>
+            ${a.recomendaciones && a.recomendaciones.length ? `
+              <div class="analysis-recom-title">💡 RECOMENDACIONES DE ESTILO:</div>
+              <ul class="analysis-recom-list">
+                ${a.recomendaciones.map(r => `<li>${r}</li>`).join('')}
+              </ul>
+            ` : ''}
+          </div>
+        `;
 
 
       } catch (error) {
