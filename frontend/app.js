@@ -431,6 +431,7 @@ if (sendButton) {
 
       } finally {
 
+        await cargarEstadoCreditos();
         sendButton.disabled = false;
 
         sendButton.textContent =
@@ -726,6 +727,7 @@ if (uploadGarmentButton) {
     }
 
     await loadWardrobe(false);
+    await cargarEstadoCreditos();
 
     if (garmentResponseBox) {
       if (errores.length) {
@@ -2709,7 +2711,11 @@ async function cargarEstadoCreditos() {
 
     const groq = data.groq;
     if (groq && groq.restantes_requests_dia !== null && groq.restantes_requests_dia !== undefined) {
-      setText(groqEl, groqElMobile, `${groq.restantes_requests_dia}/${groq.limite_requests_dia} req`, false);
+      const solicitudes = `${groq.restantes_requests_dia}/${groq.limite_requests_dia} req`;
+      const tokens = groq.restantes_tokens_minuto !== null && groq.restantes_tokens_minuto !== undefined
+        ? ` · ${groq.restantes_tokens_minuto} tok/min`
+        : "";
+      setText(groqEl, groqElMobile, `${solicitudes}${tokens}`, false);
     } else {
       setText(groqEl, groqElMobile, "aún sin usar", false);
     }

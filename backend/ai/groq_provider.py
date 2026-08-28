@@ -86,6 +86,14 @@ def _actualizar_estado_groq(headers) -> None:
         pass
 
 
+def _actualizar_estado_groq_desde_error(error: Exception) -> None:
+    """Conserva los headers de límite cuando Groq responde con un error HTTP."""
+    response = getattr(error, "response", None)
+    headers = getattr(response, "headers", None)
+    if headers:
+        _actualizar_estado_groq(headers)
+
+
 def obtener_estado_groq() -> dict:
     """Devuelve el último estado conocido (puede tener valores None si todavía no se hizo ninguna llamada)."""
     return dict(_ultimo_estado_groq)
@@ -136,19 +144,23 @@ class GroqProvider(AIProvider):
             content.append({"type": "text", "text": "Referencia de Mi modelo:"})
             content.append({"type": "image_url", "image_url": {"url": f"data:{reference_mime_type};base64,{reference_base64}"}})
 
-        raw_response = self.client.chat.completions.with_raw_response.create(
-            model="qwen/qwen3.6-27b",
-            messages=[
-                {
-                    "role": "user",
-                    "content": content,
-                }
-            ],
-            temperature=0.3,
-            max_completion_tokens=3072,
-            response_format={"type": "json_object"},
-            reasoning_effort="none",
-        )
+        try:
+            raw_response = self.client.chat.completions.with_raw_response.create(
+                model="qwen/qwen3.6-27b",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": content,
+                    }
+                ],
+                temperature=0.3,
+                max_completion_tokens=3072,
+                response_format={"type": "json_object"},
+                reasoning_effort="none",
+            )
+        except Exception as error:
+            _actualizar_estado_groq_desde_error(error)
+            raise
         _actualizar_estado_groq(raw_response.headers)
         completion = raw_response.parse()
 
@@ -160,27 +172,31 @@ class GroqProvider(AIProvider):
         image_bytes = _redimensionar_si_excede_limite(image_bytes)
         base64_image = base64.b64encode(image_bytes).decode("utf-8")
 
-        raw_response = self.client.chat.completions.with_raw_response.create(
-            model="qwen/qwen3.6-27b",
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": GARMENT_PROMPT},
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:{mime_type};base64,{base64_image}"
+        try:
+            raw_response = self.client.chat.completions.with_raw_response.create(
+                model="qwen/qwen3.6-27b",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": GARMENT_PROMPT},
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:{mime_type};base64,{base64_image}"
+                                },
                             },
-                        },
-                    ],
-                }
-            ],
-            temperature=0.4,
-            max_completion_tokens=512,
-            response_format={"type": "json_object"},
-            reasoning_effort="none",
-        )
+                        ],
+                    }
+                ],
+                temperature=0.4,
+                max_completion_tokens=512,
+                response_format={"type": "json_object"},
+                reasoning_effort="none",
+            )
+        except Exception as error:
+            _actualizar_estado_groq_desde_error(error)
+            raise
         _actualizar_estado_groq(raw_response.headers)
         completion = raw_response.parse()
 
