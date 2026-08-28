@@ -1079,6 +1079,16 @@ em {
   overflow: hidden;
 }
 
+.mini-feature-icon svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .mini-feature strong,
 .mini-feature span {
   display: block;
@@ -4504,11 +4514,21 @@ body::before {
 }
 
 .wave-bar {
-  width: 2px;
-  height: 4px;
+  width: 3px;
+  height: 6px;
   background: var(--text-muted);
   border-radius: 1px;
   transition: height 0.2s ease;
+}
+
+@media (min-width: 769px) {
+  .music-waves {
+    min-width: 22px;
+  }
+
+  .wave-bar:nth-child(1) { height: 7px; }
+  .wave-bar:nth-child(2) { height: 12px; }
+  .wave-bar:nth-child(3) { height: 9px; }
 }
 
 .luxury-music-player.playing .wave-bar {
