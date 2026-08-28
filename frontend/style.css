@@ -3232,6 +3232,31 @@ input[type="file"] {
   position: relative;
 }
 
+.model-dropzone::before,
+.model-dropzone::after {
+  content: "";
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border: 1px solid rgba(201, 166, 107, .16);
+  border-radius: 42% 58% 64% 36%;
+  pointer-events: none;
+  animation: model-orbit 12s ease-in-out infinite;
+}
+
+.model-dropzone::after {
+  width: 280px;
+  height: 280px;
+  border-color: rgba(255, 255, 255, .06);
+  animation-delay: -5s;
+  animation-duration: 16s;
+}
+
+@keyframes model-orbit {
+  0%, 100% { transform: rotate(0deg) scale(1); opacity: .45; }
+  50% { transform: rotate(180deg) scale(1.08); opacity: .9; }
+}
+
 .model-dropzone:hover {
   border-color: var(--gold);
 }
@@ -4241,6 +4266,16 @@ body::before {
   margin: 0;
   padding-left: 18px;
   color: var(--text-muted);
+}
+
+.analysis-personalization-note {
+  padding: 10px 12px;
+  border: 1px solid rgba(201, 166, 107, 0.3);
+  border-radius: var(--radius-sm);
+  background: var(--gold-soft);
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .analysis-recom-title {

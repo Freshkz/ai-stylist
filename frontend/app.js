@@ -20,6 +20,44 @@ function imgUrl(pathOrUrl) {
   return pathOrUrl.startsWith("http") ? pathOrUrl : `${BACKEND_URL}${pathOrUrl.startsWith("/") ? "" : "/uploads/"}${pathOrUrl}`;
 }
 
+async function optimizarImagenParaSubida(file) {
+  if (!file.type.startsWith("image/") || file.size <= 2 * 1024 * 1024) return file;
+
+  return new Promise((resolve) => {
+    const image = new Image();
+    const reader = new FileReader();
+    reader.onload = () => {
+      image.onload = () => {
+        const maxDimension = 1920;
+        const scale = Math.min(1, maxDimension / Math.max(image.width, image.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(image.width * scale));
+        canvas.height = Math.max(1, Math.round(image.height * scale));
+        canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((blob) => {
+          resolve(blob ? new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" }) : file);
+        }, "image/jpeg", 0.84);
+      };
+      image.src = reader.result;
+    };
+    reader.onerror = () => resolve(file);
+    reader.readAsDataURL(file);
+  });
+}
+
+async function leerRespuestaJson(res) {
+  const texto = await res.text();
+  try {
+    return JSON.parse(texto);
+  } catch {
+    throw new Error(
+      res.status === 413
+        ? "La imagen es demasiado grande. Probá con una foto más liviana."
+        : `El servidor respondió con un error (${res.status}). Intentá nuevamente.`
+    );
+  }
+}
+
 
 // ============================
 // Sesión (login persistente por navegador, tipo Facebook)
@@ -106,7 +144,7 @@ if (loginForm) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      const data = await res.json();
+      const data = await leerRespuestaJson(res);
 
       if (data.status === "error") {
         errorEl.textContent = data.message;
@@ -365,7 +403,8 @@ if (sendButton) {
             <div class="analysis-detail-row"><strong>✨ Estilo:</strong> ${a.estilo || "Personal"}</div>
             <div class="analysis-detail-desc">${a.descripcion || ""}</div>
             ${a.detalles_prenda ? `<div class="analysis-detail-block"><strong>🔎 DETALLES:</strong><p>${a.detalles_prenda}</p></div>` : ""}
-            ${a.como_favorece ? `<div class="analysis-detail-block"><strong>💛 PENSADO PARA VOS:</strong><p>${a.como_favorece}</p></div>` : ""}
+            ${a.como_favorece && hasBodyPhoto ? `<div class="analysis-detail-block"><strong>💛 PENSADO PARA VOS:</strong><p>${a.como_favorece}</p></div>` : ""}
+            ${!hasBodyPhoto ? `<div class="analysis-personalization-note">💛 ¿Querés una recomendación pensada especialmente para vos? Subí tu foto en <strong>Mi modelo</strong> y tu estilista podrá personalizarla según tus proporciones y rasgos visibles.</div>` : ""}
             ${a.combinaciones && a.combinaciones.length ? `<div class="analysis-detail-block"><strong>👗 CÓMO COMBINARLO:</strong><ul>${a.combinaciones.map(item => `<li>${item}</li>`).join("")}</ul></div>` : ""}
             ${a.ocasiones && a.ocasiones.length ? `<div class="analysis-detail-row"><strong>📍 Ocasiones:</strong> ${a.ocasiones.join(" · ")}</div>` : ""}
             ${a.busqueda_compra ? `<div class="analysis-detail-block"><strong>🛍️ PARA BUSCAR:</strong><p>${a.busqueda_compra}</p></div>` : ""}
@@ -652,6 +691,7 @@ if (uploadGarmentButton) {
 
       uploadGarmentButton.textContent = `Analizando ${i + 1}/${total}...`;
 
+      file = await optimizarImagenParaSubida(file);
       const formData = new FormData();
       formData.append("file", file);
 
@@ -1091,11 +1131,11 @@ function renderWardrobeGrid(
             >
 
             <button
-              class="garment-favorite"
+              class="garment-favorite ${prenda.favorito ? "active" : ""}"
               type="button"
-              aria-label="Agregar a favoritos"
+              aria-label="${prenda.favorito ? "Quitar de favoritos" : "Agregar a favoritos"}"
             >
-              ♡
+              ${prenda.favorito ? "♥" : "♡"}
             </button>
           ${prenda.probada ? '<span class="garment-tried-badge" title="Ya probada con tu modelo actual — no gasta crédito de nuevo">⚡ Probada</span>' : ""}
             <button
@@ -1293,25 +1333,27 @@ function renderWardrobeGrid(
 
       favoriteButton.addEventListener(
         "click",
-        (event) => {
+        async (event) => {
 
           event.stopPropagation();
 
 
-          favoriteButton.classList.toggle(
-            "active"
-          );
-
-
-          favoriteButton.textContent =
-
-            favoriteButton.classList.contains(
-              "active"
-            )
-
-              ? "♥"
-
-              : "♡";
+          const nuevoValor = !prenda.favorito;
+          favoriteButton.disabled = true;
+          try {
+            const res = await authFetch(`${BACKEND_URL}/armario/${prenda.id}/favorito?valor=${nuevoValor}`, { method: "POST" });
+            const data = await leerRespuestaJson(res);
+            if (data.status === "error") throw new Error(data.message);
+            prenda.favorito = Boolean(data.favorito);
+            favoriteButton.classList.toggle("active", prenda.favorito);
+            favoriteButton.textContent = prenda.favorito ? "♥" : "♡";
+            favoriteButton.setAttribute("aria-label", prenda.favorito ? "Quitar de favoritos" : "Agregar a favoritos");
+          } catch (error) {
+            garmentResponseBox.textContent = `❌ No se pudo actualizar el favorito: ${error.message}`;
+            garmentResponseBox.className = "response-box error";
+          } finally {
+            favoriteButton.disabled = false;
+          }
 
         }
       );

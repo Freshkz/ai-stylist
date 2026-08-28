@@ -62,7 +62,7 @@ class PooledConnection:
         try:
             self._conn.close()
         except Exception:
-            pass
+            conn.rollback()
 
 
 def get_connection():
@@ -120,9 +120,12 @@ def init_db():
             estilo TEXT NOT NULL,
             descripcion TEXT NOT NULL,
             categoria TEXT NOT NULL DEFAULT 'otros',
+            favorito BOOLEAN NOT NULL DEFAULT FALSE,
             fecha TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )
     """)
+
+    cur.execute("ALTER TABLE prendas ADD COLUMN IF NOT EXISTS favorito BOOLEAN NOT NULL DEFAULT FALSE;")
 
     cur.execute("""
         CREATE TABLE IF NOT EXISTS outfits (
@@ -312,6 +315,21 @@ def listar_prendas(user_id: int = 1) -> list[dict]:
     cur.close()
     conn.close()
     return [dict(f) for f in filas]
+
+
+def marcar_favorito_prenda(prenda_id: int, favorito: bool, user_id: int = 1) -> bool:
+    """Marca o desmarca una prenda favorita, solo si pertenece al usuario."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE prendas SET favorito = %s WHERE id = %s AND user_id = %s",
+        (favorito, prenda_id, user_id),
+    )
+    actualizado = cur.rowcount > 0
+    conn.commit()
+    cur.close()
+    conn.close()
+    return actualizado
 
 
 def obtener_prenda(prenda_id: int, user_id: int = 1) -> dict | None:

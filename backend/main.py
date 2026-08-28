@@ -44,6 +44,7 @@ from database import (
     listar_ids_prendas_probadas,
     obtener_combo_cache,
     guardar_combo_cache,
+    marcar_favorito_prenda,
 )
 from fashn import crear_tryon, FashnError, obtener_creditos
 from auth import hash_password, verificar_password, crear_token, obtener_usuario_actual
@@ -633,6 +634,14 @@ def obtener_historial(favoritos: bool = False, user_id: int = Depends(obtener_us
         })
 
     return {"status": "success", "outfits": resultado}
+
+
+@app.post("/armario/{prenda_id}/favorito")
+def cambiar_favorito_prenda(prenda_id: int, valor: bool, user_id: int = Depends(obtener_usuario_actual)):
+    actualizado = marcar_favorito_prenda(prenda_id, valor, user_id=user_id)
+    if not actualizado:
+        return {"status": "error", "message": "No se encontró esa prenda"}
+    return {"status": "success", "id": prenda_id, "favorito": valor}
 
 
 @app.post("/armario/outfits/{outfit_id}/favorito")
