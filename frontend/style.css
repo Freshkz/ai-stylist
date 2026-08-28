@@ -1079,16 +1079,6 @@ em {
   overflow: hidden;
 }
 
-.mini-feature-icon svg {
-  width: 24px;
-  height: 24px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.7;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
 .mini-feature strong,
 .mini-feature span {
   display: block;
@@ -1101,41 +1091,41 @@ em {
   font-weight: 600;
 }
 
-.topbar-actions {
-  gap: 4px;
-  min-width: 0;
-}
+@media (max-width: 768px) {
+  .topbar-actions {
+    gap: 4px;
+    min-width: 0;
+  }
 
-.topbar-actions > .topbar-icon:not(.topbar-credits-toggle) {
-  display: none;
-}
+  .topbar-actions > .topbar-icon:not(.topbar-credits-toggle) {
+    display: none;
+  }
 
-.topbar-actions .luxury-music-player {
-  display: inline-flex;
-  width: 36px;
-  height: 36px;
-  justify-content: center;
-  padding: 0;
-  margin-left: 2px;
-  margin-right: 0;
-  border-radius: 50%;
-}
+  .topbar-actions .luxury-music-player {
+    display: inline-flex;
+    flex: 1;
+    min-width: 0;
+    margin-left: 2px;
+    margin-right: 0;
+  }
 
-.topbar-actions .luxury-music-player .music-info {
-  display: none;
-}
+  .topbar-actions .luxury-music-player .music-info {
+    display: flex;
+    min-width: 0;
+  }
 
-.topbar-actions .luxury-music-player .music-play-btn {
-  width: 30px;
-  height: 30px;
-}
+  .topbar-actions .luxury-music-player .music-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
-.topbar-avatar {
-  display: grid;
-  width: 38px;
-  height: 38px;
-  margin-left: 4px;
-  border-color: rgba(201,166,107,.45);
+  .topbar-avatar {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    margin-left: 4px;
+    border-color: rgba(201,166,107,.45);
+  }
 }
 
 .mini-feature span {
@@ -4521,15 +4511,13 @@ body::before {
   transition: height 0.2s ease;
 }
 
-@media (min-width: 769px) {
-  .music-waves {
-    min-width: 22px;
-  }
-
-  .wave-bar:nth-child(1) { height: 7px; }
-  .wave-bar:nth-child(2) { height: 12px; }
-  .wave-bar:nth-child(3) { height: 9px; }
+.music-waves {
+  min-width: 22px;
 }
+
+.wave-bar:nth-child(1) { height: 7px; }
+.wave-bar:nth-child(2) { height: 12px; }
+.wave-bar:nth-child(3) { height: 9px; }
 
 .luxury-music-player.playing .wave-bar {
   background: var(--gold);
