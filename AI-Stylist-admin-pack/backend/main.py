@@ -57,7 +57,6 @@ class PrendaUpdate(BaseModel):
     colores: str
     estilo: str
     descripcion: str
-    categoria: str = "otros"
 
 
 class ComboIniciarRequest(BaseModel):
@@ -344,7 +343,6 @@ def editar_prenda(prenda_id: int, datos: PrendaUpdate, user_id: int = Depends(ob
         colores=datos.colores,
         estilo=datos.estilo,
         descripcion=datos.descripcion,
-        categoria=datos.categoria,
         user_id=user_id,
     )
     if not actualizado:

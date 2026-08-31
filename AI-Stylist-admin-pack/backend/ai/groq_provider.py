@@ -1,0 +1,261 @@
+"""
+AI Stylist - Proveedor de IA: Groq (Fase 2)
+
+Usa el modelo multimodal qwen/qwen3.6-27b de Groq, que corre en
+hardware LPU (muy rápido) y tiene tier gratis sin tarjeta de crédito.
+"""
+
+import os
+import json
+import base64
+import io
+from PIL import Image
+from groq import Groq
+from .base import AIProvider, StyleAnalysis, OutfitSuggestions, OUTFIT_PROMPT_TEMPLATE, GarmentAnalysis, GARMENT_PROMPT
+
+
+def _redimensionar_si_excede_limite(image_bytes: bytes, max_dim: int = 1920) -> bytes:
+    """
+    Garantiza que la imagen no exceda los límites de resolución de la API de Groq
+    (evita el error 400 Image too large de 33M px) y acelera el tiempo de respuesta.
+    """
+    try:
+        img = Image.open(io.BytesIO(image_bytes))
+        width, height = img.size
+        if width > max_dim or height > max_dim or (width * height > 16000000):
+            print(f"[RESIZE] Redimensionando imagen de {width}x{height} a max {max_dim}px para evitar limite de API Groq...")
+            img.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
+            output = io.BytesIO()
+            fmt = img.format if img.format in ("PNG", "JPEG", "WEBP") else "JPEG"
+            if fmt == "JPEG" and img.mode in ("RGBA", "P"):
+                img = img.convert("RGB")
+            img.save(output, format=fmt, quality=85)
+            return output.getvalue()
+    except Exception as e:
+        print(f"[RESIZE INFO] Aviso al optimizar dimensiones: {e}")
+    return image_bytes
+
+
+STYLIST_PROMPT = """
+Sos una estilista personal experta, cálida y detallista. Analizá la imagen
+principal y detectá si muestra una persona con outfit, varias prendas o una
+sola prenda. La segunda imagen, si existe, es la referencia privada de
+"Mi modelo".
+
+Devolvé SOLO JSON con estas claves: prendas (lista), colores (lista), estilo,
+descripcion extensa, recomendaciones (3 elementos detallados), tipo_imagen
+(outfit/prenda/conjunto), detalles_prenda, como_favorece, combinaciones (3
+combinaciones concretas aunque no estén en el armario), ocasiones (lista) y
+busqueda_compra. Compará con la referencia para personalizar proporciones,
+piel, ojos y cabello únicamente cuando sean visibles. No inventes rasgos.
+Usá el nombre indicado y un tono amoroso, como un regalo especial para ella.
+No seas breve: cada explicación debe tener varias oraciones y consejos
+concretos.
+
+IMPORTANTE: las 11 claves son obligatorias y deben aparecer siempre en el JSON,
+aunque alguna información no sea visible. Nunca omitas una clave ni uses nombres
+alternativos. Si no podés determinar un texto, devolvé una explicación breve en
+esa clave; para listas, devolvé una lista vacía. Si existe la referencia de
+"Mi modelo", completá obligatoriamente "como_favorece" comparando el look con
+esa persona sin inventar rasgos.
+"""
+
+
+# Guarda el último estado conocido de los límites de uso de Groq.
+# Se actualiza cada vez que se hace una llamada real a la API
+# (no gastamos una llamada extra solo para consultarlo).
+_ultimo_estado_groq = {
+    "limite_requests_dia": None,
+    "restantes_requests_dia": None,
+    "limite_tokens_minuto": None,
+    "restantes_tokens_minuto": None,
+}
+
+
+def _actualizar_estado_groq(headers) -> None:
+    """Lee los headers de rate limit que Groq manda en cada respuesta."""
+    global _ultimo_estado_groq
+    try:
+        _ultimo_estado_groq = {
+            "limite_requests_dia": int(headers.get("x-ratelimit-limit-requests", 0)),
+            "restantes_requests_dia": int(headers.get("x-ratelimit-remaining-requests", 0)),
+            "limite_tokens_minuto": int(headers.get("x-ratelimit-limit-tokens", 0)),
+            "restantes_tokens_minuto": int(headers.get("x-ratelimit-remaining-tokens", 0)),
+        }
+    except (TypeError, ValueError):
+        pass
+
+
+def _actualizar_estado_groq_desde_error(error: Exception) -> None:
+    """Conserva los headers de límite cuando Groq responde con un error HTTP."""
+    response = getattr(error, "response", None)
+    headers = getattr(response, "headers", None)
+    if headers:
+        _actualizar_estado_groq(headers)
+
+
+def obtener_estado_groq() -> dict:
+    """Devuelve el último estado conocido (puede tener valores None si todavía no se hizo ninguna llamada)."""
+    return dict(_ultimo_estado_groq)
+
+def _categorizar_prenda(tipo: str) -> str:
+    """Clasifica una prenda por palabras clave, igual que el frontend."""
+    texto = (tipo or "").lower()
+
+    tops = ["remera", "camisa", "musculosa", "buzo", "sweater", "top", "blusa", "polera", "chomba"]
+    pantalones = ["pantalon", "pantalón", "jean", "short", "bermuda", "falda", "pollera", "calza"]
+    vestidos = ["vestido", "mono", "enterizo", "jumpsuit"]
+    calzado = ["zapatilla", "zapato", "bota", "sandalia", "ojota", "mocasin", "mocasín"]
+    abrigos = ["campera", "abrigo", "saco", "tapado", "chaqueta", "piloto", "parka"]
+    accesorios = ["cartera", "gorra", "collar", "anteojo", "cinturon", "cinturón", "bufanda", "reloj", "gorro", "sombrero", "guante"]
+
+    if any(palabra in texto for palabra in accesorios):
+        return "accesorios"
+    if any(palabra in texto for palabra in abrigos):
+        return "abrigos"
+    if any(palabra in texto for palabra in calzado):
+        return "calzado"
+    if any(palabra in texto for palabra in vestidos):
+        return "vestidos"
+    if any(palabra in texto for palabra in pantalones):
+        return "pantalones"
+    if any(palabra in texto for palabra in tops):
+        return "tops"
+    return "otros"
+
+class GroqProvider(AIProvider):
+    def __init__(self):
+        api_key = os.getenv("GROQ_API_KEY")
+        if not api_key:
+            raise ValueError(
+                "No se encontró GROQ_API_KEY. Revisá el archivo .env "
+                "en la carpeta backend/."
+            )
+        self.client = Groq(api_key=api_key)
+
+    def analyze_image(self, image_bytes, mime_type, reference_image=None, reference_mime_type="image/jpeg", user_name=""):
+        image_bytes = _redimensionar_si_excede_limite(image_bytes)
+        base64_image = base64.b64encode(image_bytes).decode("utf-8")
+        content = [{"type": "text", "text": STYLIST_PROMPT + (f"\nNombre: {user_name}" if user_name else "")}]
+        content.append({"type": "image_url", "image_url": {"url": f"data:{mime_type};base64,{base64_image}"}})
+        if reference_image:
+            reference_image = _redimensionar_si_excede_limite(reference_image)
+            reference_base64 = base64.b64encode(reference_image).decode("utf-8")
+            content.append({"type": "text", "text": "Referencia de Mi modelo:"})
+            content.append({"type": "image_url", "image_url": {"url": f"data:{reference_mime_type};base64,{reference_base64}"}})
+
+        try:
+            raw_response = self.client.chat.completions.with_raw_response.create(
+                model="qwen/qwen3.6-27b",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": content,
+                    }
+                ],
+                temperature=0.3,
+                max_completion_tokens=3072,
+                response_format={"type": "json_object"},
+                reasoning_effort="none",
+            )
+        except Exception as error:
+            _actualizar_estado_groq_desde_error(error)
+            raise
+        _actualizar_estado_groq(raw_response.headers)
+        completion = raw_response.parse()
+
+        raw_json = completion.choices[0].message.content
+        data = json.loads(raw_json)
+        return StyleAnalysis(**data)
+
+    def analyze_garment(self, image_bytes: bytes, mime_type: str) -> GarmentAnalysis:
+        image_bytes = _redimensionar_si_excede_limite(image_bytes)
+        base64_image = base64.b64encode(image_bytes).decode("utf-8")
+
+        try:
+            raw_response = self.client.chat.completions.with_raw_response.create(
+                model="qwen/qwen3.6-27b",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": GARMENT_PROMPT},
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:{mime_type};base64,{base64_image}"
+                                },
+                            },
+                        ],
+                    }
+                ],
+                temperature=0.4,
+                max_completion_tokens=512,
+                response_format={"type": "json_object"},
+                reasoning_effort="none",
+            )
+        except Exception as error:
+            _actualizar_estado_groq_desde_error(error)
+            raise
+        _actualizar_estado_groq(raw_response.headers)
+        completion = raw_response.parse()
+
+        raw_json = completion.choices[0].message.content
+        data = json.loads(raw_json)
+        return GarmentAnalysis(**data)
+
+    def generate_outfits(self, prendas: list[dict], ocasion: str = "todas", clima: str = "cualquiera") -> OutfitSuggestions:
+        prendas_compactas = [
+            {
+                "id": p["id"],
+                "tipo": p["tipo"],
+                "colores": p["colores"],
+                "estilo": p["estilo"],
+                "categoria": _categorizar_prenda(p["tipo"]),
+            }
+            for p in prendas
+        ]
+
+        partes_contexto = []
+        if ocasion and ocasion != "todas":
+            partes_contexto.append(f"Ocasión preferida: '{ocasion}'")
+        if clima and clima != "cualquiera":
+            partes_contexto.append(f"Clima preferido: '{clima}'")
+
+        contexto_str = ""
+        if partes_contexto:
+            contexto_str = "PREFERENCIAS DEL USUARIO: " + ", ".join(partes_contexto) + ". Generá outfits que encajen prioritariamente con esta ocasión y clima."
+
+        prompt = OUTFIT_PROMPT_TEMPLATE.format(
+            prendas_json=json.dumps(prendas_compactas, ensure_ascii=False),
+            contexto_extra=contexto_str,
+        )
+
+        raw_response = self.client.chat.completions.with_raw_response.create(
+            model="qwen/qwen3.6-27b",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.8,
+            max_completion_tokens=1024,
+            response_format={"type": "json_object"},
+            reasoning_effort="none",
+        )
+        _actualizar_estado_groq(raw_response.headers)
+        completion = raw_response.parse()
+
+        raw_json = completion.choices[0].message.content
+        data = json.loads(raw_json)
+
+        for outfit in data.get("outfits", []):
+            tags = []
+            if ocasion and ocasion != "todas":
+                tags.append(ocasion.capitalize())
+            if clima and clima != "cualquiera":
+                tags.append(f"Clima {clima}")
+            if tags:
+                etiqueta = " · ".join(tags)
+                if not outfit.get("ocasion"):
+                    outfit["ocasion"] = etiqueta
+                elif etiqueta.lower() not in outfit["ocasion"].lower():
+                    outfit["ocasion"] = f"{outfit['ocasion']} ({etiqueta})"
+
+        return OutfitSuggestions(**data)

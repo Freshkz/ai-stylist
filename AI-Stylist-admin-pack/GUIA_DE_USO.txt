@@ -1,0 +1,19 @@
+﻿AI Stylist - Guía rápida para cargar ropa
+
+1) Descomprimí esta carpeta en tu PC.
+2) Entrá en la carpeta 'backend'.
+3) Ejecutá este comando en PowerShell:
+   python -m pip install -r requirements.txt
+4) Luego, para abrir la app:
+   python admin_seed_wardrobe_app.py
+5) O usá el archivo 'run_admin_wardrobe_app.bat'.
+6) Elegí la cuenta destino.
+7) Elegí la carpeta con tus fotos.
+8) Si querés, usá 'Procesar seleccionadas' para elegir solo algunas imágenes.
+9) Si alguna prenda falla, usá 'Reintentar errores'.
+
+Nota importante:
+- El backend usa rembg[cpu] para quitar fondo localmente.
+- Si ocurriera un problema de instalación de dependencias, volvé a ejecutar:
+  python -m pip install "rembg[cpu]"
+- Si no tenés el archivo .env, pedímelo y te lo paso del lado del proyecto.

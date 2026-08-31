@@ -1612,6 +1612,11 @@ const editTipoInput =
     "editTipo"
   );
 
+const editCategoriaInput =
+  document.getElementById(
+    "editCategoria"
+  );
+
 const editColoresInput =
   document.getElementById(
     "editColores"
@@ -1646,6 +1651,7 @@ function openEditGarmentModal(prenda) {
   editingPrendaId = prenda.id;
 
   editTipoInput.value = prenda.tipo || "";
+  editCategoriaInput.value = prenda.categoria || categorizarPrenda(prenda) || "otros";
   editColoresInput.value = prenda.colores || "";
   editEstiloInput.value = prenda.estilo || "";
   editDescripcionInput.value = prenda.descripcion || "";
@@ -1699,6 +1705,7 @@ if (saveEditGarmentButton) {
 
       const payload = {
         tipo: editTipoInput.value.trim(),
+        categoria: editCategoriaInput.value,
         colores: editColoresInput.value.trim(),
         estilo: editEstiloInput.value.trim(),
         descripcion: editDescripcionInput.value.trim(),

@@ -370,7 +370,7 @@ def eliminar_prenda(prenda_id: int, user_id: int = 1) -> bool:
 
 def actualizar_prenda(
     prenda_id: int, tipo: str, colores: str, estilo: str, descripcion: str,
-    categoria: str = "otros", user_id: int = 1,
+    user_id: int = 1,
 ) -> bool:
     """Actualiza los datos editables de una prenda, SOLO si es del usuario.
 
@@ -381,10 +381,10 @@ def actualizar_prenda(
     cur.execute(
         """
         UPDATE prendas
-        SET tipo = %s, colores = %s, estilo = %s, descripcion = %s, categoria = %s
+        SET tipo = %s, colores = %s, estilo = %s, descripcion = %s
         WHERE id = %s AND user_id = %s
         """,
-        (tipo, colores, estilo, descripcion, categoria, prenda_id, user_id),
+        (tipo, colores, estilo, descripcion, prenda_id, user_id),
     )
     actualizado = cur.rowcount > 0
     conn.commit()
