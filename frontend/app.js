@@ -2210,6 +2210,11 @@ document.addEventListener(
       history:
         document.getElementById(
           "historySection"
+        ),
+
+      news:
+        document.getElementById(
+          "newsSection"
         )
 
     };
