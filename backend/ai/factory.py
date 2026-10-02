@@ -24,7 +24,7 @@ def get_provider() -> AIProvider:
     if _provider_instance is not None:
         return _provider_instance
 
-    provider_name = os.getenv("AI_PROVIDER", "gemini").lower()
+    provider_name = os.getenv("AI_PROVIDER", "groq").lower()
 
     if provider_name == "gemini":
         _provider_instance = GeminiProvider()

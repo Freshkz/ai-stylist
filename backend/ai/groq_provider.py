@@ -146,7 +146,7 @@ class GroqProvider(AIProvider):
 
         try:
             raw_response = self.client.chat.completions.with_raw_response.create(
-                model="qwen/qwen3.6-27b",
+                model="qwen/qwen3.8-27b",
                 messages=[
                     {
                         "role": "user",
@@ -154,7 +154,7 @@ class GroqProvider(AIProvider):
                     }
                 ],
                 temperature=0.3,
-                max_completion_tokens=3072,
+                max_completion_tokens=768,
                 response_format={"type": "json_object"},
                 reasoning_effort="none",
             )
@@ -174,7 +174,7 @@ class GroqProvider(AIProvider):
 
         try:
             raw_response = self.client.chat.completions.with_raw_response.create(
-                model="qwen/qwen3.6-27b",
+                model="qwen/qwen3.8-27b",
                 messages=[
                     {
                         "role": "user",
@@ -232,10 +232,10 @@ class GroqProvider(AIProvider):
         )
 
         raw_response = self.client.chat.completions.with_raw_response.create(
-            model="qwen/qwen3.6-27b",
+            model="qwen/qwen3.8-27b",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.8,
-            max_completion_tokens=1024,
+            max_completion_tokens=768,
             response_format={"type": "json_object"},
             reasoning_effort="none",
         )
